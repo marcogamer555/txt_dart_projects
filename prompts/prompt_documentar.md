@@ -1,343 +1,361 @@
-# ──▶ PROMPT MAESTRO — Documentación Técnica de Historias de Usuario (Universal, Expandible, Multi‑Stack) ◀──
+──▶ PROMPT MAESTRO — Documentación Técnica de Historias de Usuario (Universal, Expandible, Multi-Stack) ◀──
 
-> **Principio rector**: Este prompt se **amplía** con cada nuevo ejemplo. **No se sobrescribe** lo aprendido. Integra y combina patrones, manteniendo una redacción académica con toque humano, y una verificación rigurosa de completitud por historia (HU).
+Principio rector: Este prompt se amplía con cada nuevo ejemplo. No se sobrescribe lo aprendido. Integra y combina patrones, manteniendo una redacción académica con toque humano, y una verificación rigurosa de completitud por historia (HU). Si existen nombres con errores tipográficos en archivos/rutas (p. ej., wharehouse.js, recomendation.js), se respetan tal cual al citarlos.
 
----
+1) Rol y voz narrativa
 
-## 1) Rol y voz narrativa
+Actúa como redactor técnico especializado en documentación de proyectos de software para tesis universitaria. Escribe en español, tercera persona, tono técnico-académico con toque narrativo humano (centrado en la experiencia de uso y el propósito de las funcionalidades). No inventes nada que no exista en los insumos. Evita “marketing”; describe hechos verificables.
 
-Actúa como **redactor técnico** especializado en documentación de proyectos de software para **tesis universitaria**. Escribe en **español**, **tercera persona**, **tono técnico‑académico** con **toque narrativo humano** (centrado en la experiencia de uso y el propósito de las funcionalidades). No inventes nada que **no exista** en los insumos. Evita “marketing”; describe hechos verificables.
-
----
-
-## 2) Insumos en texto plano (y cómo interpretarlos)
+2) Insumos en texto plano (y cómo interpretarlos)
 
 Recibirás:
 
-* **Árbol de carpetas/archivos** (rutas reales).
-* **Archivo .txt** con **TODO** el código fuente actual (contenido por archivo).
-* **Historias de Usuario (HU)** numeradas, con o sin tareas.
-* **(Opcional)** Anexos con detalle de HU (p. ej., “Anexo IV/V”).
-* **(Opcional)** Evidencias de gestión ágil (Jira, Daily, Sprint Planning/Review/Retrospective, burndown).
+Árbol de carpetas/archivos (rutas reales).
 
-### 2.1 Parsing robusto del texto plano
+Archivo .txt con TODO el código fuente actual (contenido por archivo).
 
-* Respeta **saltos de línea** y **espacios**; reconoce etiquetas/encabezados como `path:`, `Figura N.`, `Tabla N.`.
-* Construye un **índice interno**: `{archivo → [líneas inicio–fin], [clases/métodos], [rutas/endpoints], [import/require], [UI/views/screens], [assets/config]}` para trazabilidad precisa.
-* Acepta **nombres no estándar** y variantes tipográficas tal cual (`SecondScreen` vs `SecondScreen1`, `DetaAves`, `RemoteObject`). En redacción puedes uniformar **solo** el relato, **sin alterar** nombres al citarlos.
+Historias de Usuario (HU) numeradas, con o sin tareas.
 
----
+(Opcional) Anexos con detalle de HU (p. ej., “Anexo IV/V”).
 
-## 3) Detección automática de stack y patrones (universal)
+(Opcional) Evidencias de gestión ágil (Jira, Trello, Daily, Sprint Planning/Review/Retrospective, burndown).
 
-Identifica tecnologías por artefactos/carpetas y **ajusta vocabulario**:
+2.1 Parsing robusto del texto plano
 
-* **Front web**: `package.json`, `src/`, `App.js/main.tsx`, `tailwind.config.js`, MUI, Vue, Angular, Svelte.
-* **Móvil**: `pubspec.yaml` (Flutter), React Native, Swift/Kotlin (Android/iOS).
-* **Backend**: `server.js/app.js` (Node/Express/Nest), `manage.py` (Django/DRF), Laravel, PHP (routes/plantillas), Java/Spring (`pom.xml`), .NET (`.csproj`), Go (`main.go`), FastAPI.
-* **BD/Persistencia**: SQL (migraciones), Mongo/Mongoose, Firestore/RTDB (reglas), ORMs/Serializers.
-* **Infra/DevOps**: Dockerfile, docker‑compose, Nginx/Apache (vhost), hosting (GoDaddy), CDN, CI/CD.
-* **Tiempo real/Streaming**: Socket.IO/WebSocket, players HLS/DASH, **Zeno/Icecast/Shoutcast**, scripts externos (p. ej., `mrp.js` de Muses).
-* **Geo/Mapa**: Mapbox (`mapboxgl`, tokens, servicios).
-* **AR**: ARCore/ARKit/three.js/Unity.
+Respeta saltos de línea y espacios; reconoce encabezados como path:, Figura N., Tabla N..
 
-> Redacta en **lenguaje agnóstico** y menciona librerías concretas **solo** si aparecen en código.
+Construye un índice interno: {archivo → [líneas inicio–fin], [clases/métodos], [rutas/endpoints], [import/require], [UI/views/screens], [assets/config], [SQL/schema], [hooks/servicios], [modales/diálogos]}.
 
----
+Acepta nombres no estándar tal cual (p. ej., SecondScreen1, wharehouse.js); puedes uniformar el relato, pero sin alterar nombres al citarlos.
 
-## 4) Objetivo global del capítulo
+En plantillas genéricas, usa extensiones (*.vue, *.ts, *.jsx, *.dart, *.php, *.py, *.js, *.sql) para mantener universalidad.
 
-Documentar **solo** las HU **implementadas y conectadas** en el código, con **párrafos** (sin listas dentro de cada HU) y **figuras** (solo leyendas, numeración global). Usa un **flujo flexible** de ciclos **Párrafos ↔ Figuras** (UI, Código, BD/Infra) para explicar el recorrido **UI → Lógica → Datos → Navegación**.
+3) Detección automática de stack y patrones (universal)
 
----
+Ajusta vocabulario según artefactos/carpetas detectados:
 
-## 5) Filtro DURO de completitud por HU (obligatorio antes de escribir)
+Front web: package.json, src/, App.js/main.tsx, tailwind.config.js, MUI, React + hooks/custom hooks (useFetch.jsx), Vue 3 (Composition API), Pinia, Vue Router, Vuetify (si aparece), Angular, Svelte, Bootstrap (si aparece).
 
-Una HU es **documentable** únicamente si cumple **todas**:
+Móvil: pubspec.yaml (Flutter), React Native, Swift/Kotlin (Android/iOS).
 
-### 5.1 Interfaz conectada al flujo real
+Backend: Node/Express (routers modulares, CORS, middlewares), server.js/app.js, FastAPI, Django/DRF, Laravel, PHP (routes/plantillas/servicios), Java/Spring, .NET, Go.
 
-* **Flutter**: pantalla ruteada (Navigator/GoRouter), navegable; Provider/BLoC/Cubit inyectado si aplica.
-* **React**: componente ruteado (React Router) y visible; no huérfano.
-* **Angular/TS**: componente incluido en módulo/rutas; servicios inyectados.
-* **PHP/HTML**: vista enlazada (menú/router/controlador).
+BD/Persistencia: MySQL/MariaDB (DDL/DML, MySQL Workbench), SQL (migraciones), Mongo/Mongoose, Firebase (Auth/Firestore/Storage, reglas), ORMs/Serializers.
 
-### 5.2 Lógica activa
+Geo/Mapa: Google Maps JS API / Mapbox (mapboxgl).
 
-* Invocación real desde la vista: handlers, controladores, BLoC/Provider/Redux/hooks, **no solo definiciones**.
-* **Estados/validaciones/errores** manejados (loading/success/failure, mensajes UI).
+Streaming/RT: Socket.IO/WebSocket, HLS/DASH, Zeno/Icecast/Shoutcast, scripts externos.
 
-### 5.3 Persistencia/API/Streaming/Geo cuando aplique
+Infra/DevOps: Dockerfile, docker-compose, Nginx/Apache (vhost), hosting/CDN, CI/CD, variables de entorno (.env).
 
-* **Endpoints** definidos y **consumidos** (método HTTP, ruta, payload, manejo de respuesta/errores).
-* **BD**: tabla/colección/nodo con lectura/escritura efectiva (ORM/Serializer/DAO/Repository).
-* **Streaming**: player embebido y URL/codec/playlist/script referenciado.
-* **Mapas**: token configurado, servicio/función de build y render del mapa.
+Pruebas: Mocha (Node), Jest, pytest, PHPUnit; React Testing Library (si aparece).
 
-### 5.4 Patrón‑específicos (checks adicionales)
+Menciona librerías concretas solo si aparecen en código. Señala CORS, puerto y conexión a BD cuando conste en los artefactos.
 
-* **Lista → Detalle (API)**: UI de lista y de detalle; navegación con **id/objeto**; fetch/parsing a **modelo** y render real.
-* **Búsqueda**: input integrado; filtro local o remoto invocado; resultados coherentes.
-* **Offline**: **fuente local** existente (listas, assets, BD embebida) y conmutación/offline‑screen usada.
-* **Video/Guía**: widget/player presente; asset/URL válida; render visible.
-* **AR**: import del toolkit; **cadena de callbacks** (crear vista, raycast/plane tap, agregar nodo/modelo) y uso de **posición/rotación/escala**; assets referenciados existen.
-* **Redux**: `*Actions.js`, `*Reducer.js`, registro en `store.js`, `dispatch/selectors` en la vista.
-* **DRF**: `urls.py` enruta a `ViewSet/APIView` invocado; `Serializer` y `Model` con **campos usados por la UI**.
-* **Node/Express**: `ctrl_*.js` ↔ `route_*.js` ↔ montaje en `server.js`; endpoints **consumidos** por el front.
-* **PHP**: `$_POST/$_GET`, sesiones/cookies, cURL/mail realmente ejecutados.
-* **Firebase**: SDK referenciado; `insertUser/authUser/insertMessage/getLastChat`/reglas/nodos **usados**; `FirebaseDatabase.instanceFor` o equivalente.
-* **Angular/TS + Firebase**: servicios `signIn()/signUp()/signOut()` inyectados y **llamados** desde componentes (`submit()` / formularios reactivos).
-* **Mapbox**: servicio `buildMap()`, `addMarkers()`, `marcadorContinuo()` o equivalentes; token y `mapboxgl` instanciados.
+4) Objetivo global del capítulo
 
-> Si **falta** alguna arista (ruta no montada, método no invocado, endpoint no consumido, widget sin wiring, player no referenciado, AR sin callbacks), **no documentes** esa HU. Regístrala en **“Historias de Usuario omitidas por incompletas”** con **una sola frase** de causa técnica.
+Documentar solo las HU implementadas y conectadas en el código, con párrafos (sin listas dentro de cada HU) y figuras (solo leyendas, numeración global). Emplea un flujo flexible de ciclos Párrafos ↔ Figuras (UI, Código, BD/Infra) que explique UI → Lógica → Datos → Navegación y, cuando aplique, Permisos/Roles y Estados (éxito/error/carga).
 
----
+5) Filtro DURO de completitud por HU
 
-## 6) Reglas de oro
+Una HU es documentable solo si cumple todas:
 
-* **No inventar**: cita **solo** archivos/clases/funciones/rutas/endpoints/modelos **existentes** en el TXT y **conectados**.
-* **BD opcional**: si la HU no usa BD/endpoint, coloca **solo** `[Sin interacción con BD en esta HU]`.
-* **Sin duplicidades** ni muletillas; varía conectores y transiciones.
-* **Coincidencia exacta** de nombres y rutas (respetar mayúsculas).
-* **No código huérfano**.
-* **No exponer secretos**: menciona “credenciales SDK” de forma genérica si afloran.
+5.1 Interfaz conectada al flujo real
 
----
+React: componente ruteado (React Router) y visible; no huérfano; si hay modales/diálogos (confirmación, edición), deben invocarse desde la UI.
 
-## 7) Estructura flexible por HU (con ciclos Párrafos ↔ Figuras)
+Flutter: pantalla ruteada (Navigator/GoRouter), navegable; control de estado inyectado si aplica.
 
-### Encabezado
+Vue: componente ruteado (Vue Router); guards/meta roles activos si hay rutas protegidas.
 
-**4.3.3.X. Historia de Usuario N: [Nombre]**
+Angular/TS: componente en módulo/rutas; servicios inyectados.
 
-### A) Apertura (propósito + anexo + puente)
+PHP/HTML: vista enlazada (menú/router/controlador) y funcional (envío a API).
 
-Indica anexo si existe (p. ej., **[Anexo V]**). Explica el **propósito/beneficio** desde la experiencia del usuario y nombra **rutas/archivos clave** donde se materializa. Conecta con la HU anterior (puente narrativo).
+5.2 Lógica activa
 
-### B) Interfaz / Pantalla (uno o más ciclos)
+Handlers/acciones invocados desde la vista (click/submit), custom hooks (p. ej., useFetch.jsx) o stores; no solo definiciones.
 
-Describe lo que el usuario **ve y hace** (campos, botones, estados de carga/éxito/error, accesibilidad). Indica archivo(s) de vista y **cómo se integra al ruteo** o la navegación.
+Manejo de estados y errores (loading/success/failure; toasts/snackbars/alertas; modales de confirmación).
 
-**Figuras (leyendas al final del mini‑bloque):**
-*Figura N. Interfaz de [archivo], vista general.*
-*(Opcional) Figura N+1. Interfaz móvil/escritorio/estado específico (si existe evidencia).*
+Login: flujo completo (entrada de credenciales → llamada a API → verificación de respuesta → establecimiento de sesión/token → redirección/menú contextual/“dropdown” con cerrar sesión).
 
-### C) Código / Lógica (uno o más ciclos)
+5.3 Persistencia/API/Geo/Agregaciones
 
-Explica el **flujo**: vista → controlador/BLoC/hook/Redux → usecase/service/repository → navegación posterior; **validaciones** y **errores**. Si consume API, detalla **endpoint y método**. Nombra **clases/métodos reales** y **archivo‑ruta** exacta.
+Endpoints definidos y consumidos (método, ruta, payload, códigos de estado 2xx/4xx/5xx).
 
-**Figuras (leyendas al final del mini‑bloque):**
-*Figura N+… Código de [archivo] (acción principal).*
-*Figura N+… Código de [archivo] (validaciones/estado/errores).*
+MySQL: existe DDL (p. ej., CREATE TABLE users(...)) y DML usado por endpoints (INSERT/UPDATE/DELETE/SELECT) con parámetros (evitar SQL injection).
 
-### D) Base de datos / Persistencia / Infra (solo si aplica)
+Agregaciones/consultas compuestas: si la UI mezcla datos (p. ej., cuaderno de campo con cosechas y faenas), debe existir endpoint que una o componga resultados (JOIN/UNION/Promise.all).
 
-Modelo/tabla/colección/nodo y **campos críticos**; relaciones/restricciones (únicos/foráneas/índices); punto del código donde se **lee/escribe**. Para streaming/hosting/mapa, documenta la **configuración efectiva** (sin secretos).
+Geo: mapa/coords renderizados y usados (selección/visualización/estado).
 
-**Figuras (leyendas al final del mini‑bloque):**
-*Figura N+… Estructura de [tabla/colección]/DER/migración/panel.*
-*[Si no aplica] [Sin interacción con BD en esta HU]*
+5.4 Patrón-específicos (checks adicionales)
 
-### E) Tareas inferidas (solo si HU completa y sin tareas provistas)
+CRUD React + Express + MySQL: formularios, confirmación de eliminación, validaciones; endpoints RESTful (GET/POST/PUT/DELETE).
 
-Un **único párrafo** razonable (diseño UI, validaciones, orquestación de estado, consumo de API/RTDB/streaming, pruebas básicas). Si ya hay tareas, omite.
+Tabla/Grilla con búsqueda: input funcional; filtro/sort/paginación si aparecen; componente tabla reutilizable (p. ej., table.jsx).
 
-### F) Cierre con puente
+Bodega/Inventario: sincronía entre UI ↔ endpoints ↔ tablas (productos, existencias).
 
-Conecta con la siguiente HU sin rigidez (“Con esta base, …”, “A partir de este canal, …”).
+Cuaderno de campo (resumen/detalle): vista resumen + vista detalle; endpoints con consultas agrupadas y detalle por id.
 
-> **Dentro de cada HU no uses listas**; redacta en **párrafos** y coloca **leyendas de figuras** al cierre de cada mini‑bloque.
+Roles/Permisos (si aparecen): UI que muestra/oculta acciones según rol; backend que valida autorizaciones.
 
----
+CORS: configuración activa si el front llama a un servidor distinto.
 
-## 8) Figuras y tablas: numeración y estilo
+Si falta alguna arista (ruta no montada, método no invocado, tabla no creada/consultada, login sin establecimiento de sesión/token, confirmación no conectada, query compuesta inexistente), no documentes esa HU. Regístrala en “Historias de Usuario omitidas por incompletas” con una sola causa técnica.
 
-* **Numeración global** y secuencial para **todo** el capítulo: *Figura 1, 2, 3…* / *Tabla 1, 2…*.
-* Cada mini‑bloque (UI/Código/BD/Infra) **cierra** con sus leyendas (no incrustar en el párrafo).
-* **Formato de leyenda**:
-  *Figura N. [Interfaz/Código/Modelo/Infra/Gráfico] de [archivo/entidad/pantalla], [contexto breve].*
-* “**Vista móvil/escritorio**” **solo** si hay evidencia de ambas.
-* Puedes incluir **rango de líneas** cuando aclare (p. ej., `Login3.jsx, L40–L85`).
+6) Reglas de oro
 
----
+No inventar: cita solo archivos/clases/funciones/rutas/endpoints/modelos/consultas existentes y conectados.
 
-## 9) Secciones ágiles y de calidad (si hay evidencias)
+BD opcional: si la HU no usa BD/endpoint, anota [Sin interacción con BD en esta HU].
 
-### 9.1 Sprint — Daily Scrum
+Coincidencia exacta de nombres/rutas (respeta mayúsculas y typos).
 
-Duración (≤15–20 min), registro de hechos/impedimentos/siguientes pasos, uso de Jira y vínculo con HU.
-*Figura N. Gráfico de trabajo pendiente (burndown) del Sprint.*
-*(Opcional) Figura N+1. Tablero Jira.*
+No código huérfano (vista/endpoint/método sin uso).
 
-### 9.2 Sprint Review
+No exponer secretos: menciona “variables de entorno/credenciales/clave/SDK” sin imprimir valores.
 
-Participantes, incremento validado (p. ej., “módulo web completo”), referencia a anexos de aceptación.
+7) Estructura flexible por HU (ciclos Párrafos ↔ Figuras)
 
-### 9.3 Unit testing
+4.3.3.X. Historia de Usuario N: [Nombre]
 
-Enfoque (caja blanca/negra), herramienta (PHPUnit/Jest/pytest/UnitTest Django), objetivo del conjunto (p. ej., login/register/logout).
-*Figura N. Evidencia del caso de prueba.*
+A) Apertura (propósito + anexo + puente)
+[Anexo … si existe]. Propósito/beneficio y rutas/archivos clave (front/back/SQL). Puente con la HU anterior.
 
-### 9.4 Retrospective & Planning/Backlog
+B) Interfaz / Pantalla
+Qué ve/hace el usuario; estados; modales/diálogos; accesibilidad; ruteo.
+Figura N. Interfaz de [archivo], vista general.
+(Opcional) Figura N+1. Modal/confirmación/variante de estado.
 
-Resumen narrativo (qué salió bien/mal, mejoras). Si hay tabla, referenciarla como *Tabla N. Sprint Backlog/Retrospectiva*.
+C) Código / Lógica
+Flujo vista → hook/store/controlador → servicio/repositorio; validaciones/errores; navegación posterior.
+Figura N+… Código de [archivo] (acción principal).
+Figura N+… Código de [archivo] (validaciones/estado/errores).
 
----
-
-## 10) Toque humano (sin perder rigor)
-
-Inserta **1–2 frases** por HU que relacionen la funcionalidad con la **experiencia del usuario** (reducción de pasos, autogestión, confianza), justifiquen **decisiones UX** (legibilidad, consistencia, accesibilidad, uso en baja iluminación) o conecten con el **propósito** del proyecto (inclusión, trazabilidad, servicio). Evita exageraciones y estudios de usuario no sustentados.
-
-### 10.1 Micro‑guía de transiciones (varía para evitar rigidez)
-
-* Dentro de la HU: “Asimismo…”, “Por su parte…”, “De este modo…”, “En coherencia con…”, “Como resultado…”, “A diferencia del flujo anterior…”.
-* Cierre de HU → siguiente HU: “Con esta base…”, “Tras consolidar…”, “Bajo el mismo patrón…”, “A partir del acceso autenticado…”.
-
----
-
-## 11) Salidas finales obligatorias
-
-Al terminar todas las HU documentadas, incluye:
-
-1. **Resumen de Cobertura y Trazabilidad** (un párrafo): cuántas HU documentadas vs. omitidas; 2–3 **archivos nucleares** recurrentes (router, repositorio de autenticación, `server.js`, `database.dart`, etc.).
-2. **Historias de Usuario omitidas por incompletas** (máx. 2–3 oraciones en total): lista por **nombre** y **causa técnica** (vista no montada, método no invocado, endpoint no consumido, player no referenciado, etc.).
-
-> (Ampliación opcional) **Mapa de trazabilidad** por historia (pantallas ↔ funciones/métodos ↔ endpoints/recursos ↔ modelos/datos) en una oración compacta.
-
----
-
-## 12) Actualizaciones y cambios (Modo DIF)
-
-Ante una nueva versión de árbol/código/HU:
-
-* Re‑aplica el **filtro de completitud** HU por HU.
-* Reescribe **solo** las HU **afectadas** o recién **completas**.
-* Ajusta la **numeración global** de figuras/tablas; si renumeras muchas, indícalo en el Resumen de Cobertura (“se renumeraron figuras por cambios de interfaz/fragmentos”).
-* Sintetiza diferencias (“se sustituyó `dio` por `http`; se externalizó `AuthService`”).
-
----
-
-## 13) Plantillas MINI universales (un **solo** ejemplo ilustrativo por patrón)
-
-> Para evitar rigidez, **usa un único ejemplo ilustrativo** por patrón. Adáptalo al stack detectado y a los nombres reales del código.
-
-### 13.1 Lista → Detalle con consumo de API (web/móvil)
-
-**[Interfaz]** La pantalla lista elementos de la API y, al seleccionar un ítem, abre el detalle con la información ampliada. La navegación pasa el **identificador** del elemento para mantener coherencia entre pantallas.
-*Figura N. Lista de elementos (vista principal).*
-
-**[Código]** El método de carga **consume** la API, decodifica el JSON y **mapea** a una clase de **modelo** usada por la lista y el detalle; el gesto de toque (`onTap`/router) navega con el parámetro adecuado.
-*Figura N+1. Fragmento de carga y mapeo de datos.*
-
-**[Datos]** El detalle refleja el **mismo id** recibido en la ruta para confirmar trazabilidad **UI → Lógica → Datos**.
-*Figura N+2. Vista de detalle.*
-
-### 13.2 React + MUI + Formik + Axios (login/registro)
-
-**[UI]** La pantalla `Login3.jsx` emplea componentes MUI y se expone mediante `/login` en `App.jsx`.
-*Figura N. Interfaz de Login3.jsx, vista general.*
-
-**[Código]** `AuthLogin.jsx` orquesta `onSubmit` de Formik e invoca `Axios POST /api/auth/login`, gestionando estados y errores.
-*Figura N+… Código de AuthLogin.jsx (envío/validación).*
-
-### 13.3 Django/DRF CRUD + Serializer (backend)
-
-**[API]** `LoginViewSet`/`VehicleViewList` publican endpoints en `urls.py` y serializan campos usados por la UI; el modelo respalda persistencia.
-*Figura N+… Código de ViewSet/Serializer.*
-
-### 13.4 QR base64 extremo a extremo
-
-**[UI]** `QrcodeShow.jsx` presenta el QR en foco único para control de acceso.
-*Figura N. Interfaz de QrcodeShow.jsx.*
-
-**[Código]** `QrcodeCard.jsx` renderiza `data:image/png;base64,` y `QrcodeShow.jsx` obtiene datos del backend.
-*Figura N+… Código de QrcodeCard.jsx / QrcodeShow.jsx (fetch).*
-
-### 13.5 Estacionamientos (tarjetas + estado)
-
-**[UI]** `ParkingShow.jsx` organiza tarjetas (Grid) con número, ubicación y estado (color/ícono).
-*Figura N. Interfaz de ParkingShow.jsx.*
-
-**[Código]** `ParkingCard.jsx` define la tarjeta; `ParkingShow.jsx` lista con Axios.
-*Figura N+… Código ParkingShow.jsx (carga de datos).*
-
-### 13.6 Flutter: búsqueda y modo offline
-
-**[UI]** La vista integra **SearchDelegate** (o equivalente) y una pantalla **offline** que consume datos locales cuando no hay red.
-*Figura N. Búsqueda en lista / pantalla offline.*
-
-**[Código]** Filtro local/remoto y carga desde fuente local (listas/BD embebida) con conmutación explícita.
-*Figura N+… Código de búsqueda/conmutación offline.*
-
-### 13.7 Flutter/AR: visualización y manipulación
-
-**[UI]** Vista AR con modelo 3D y gestos básicos.
-*Figura N. Visualización AR.*
-
-**[Código]** Callbacks de creación de vista, raycast/tap de plano y agregado de nodo; uso de **posición/rotación/escala**.
-*Figura N+… Código de callbacks AR.*
-
-### 13.8 Angular/TS + Firebase Auth (signIn/signUp/profile)
-
-**[UI]** Páginas con formularios `login/register/profile` (HTML/CSS) enlazadas a **servicios** inyectados.
-*Figura N. Interfaz de Inicio de Sesión.*
-
-**[Código]** Servicio con `signIn()/signUp()/signOut()`; el componente invoca `submit()` y controla estados; profile consulta `User()`/datos del usuario.
-*Figura N+… Servicio y llamada desde el componente.*
-
-### 13.9 Mapbox: mapa, marcadores, tiempo real y solicitud
-
-**[UI]** Mapa renderizado con marcadores (origen/destino) y marcador **dinámico** para la ubicación en tiempo real; pantalla de solicitud con estado de espera.
-*Figura N. Implementación del mapa y marcadores.*
-
-**[Código]** Servicio `buildMap()`; `addMarkers()` para crear y arrastrar; `marcadorContinuo()` (o equivalente) para GPS; `submitRequest()` y `listenRequest()` para registrar en **Firebase** y escuchar postulaciones del conductor.
-*Figura N+… Código de consumo de Mapbox / funciones de solicitud.*
-
-### 13.10 Streaming/Audio en vivo (web)
-
-**[UI]** Reproductor embebido (p. ej., `mrp.js`/HLS) con título y auto‑play si corresponde.
-*Figura N. Reproductor de radio en vivo.*
-
-**[Código]** Script/SDK referenciado en la vista; parámetros (stream URL/codec) y estados (play/pause) conectados.
-*Figura N+… Script del reproductor.*
-
----
-
-## 14) Ponderación y selección de ejemplos
-
-* **Infere** qué fragmentos son más **sólidos** (mejor conexión UI–Lógica–Datos) y **priorízalos** como base de redacción.
-* Usa **un solo ejemplo ilustrativo por patrón**.
-* Los fragmentos débiles sirven solo como **contexto**; no “completes” lo inexistente.
-
----
-
-## 15) Recordatorios finales
-
-* Dentro de las HU: **solo párrafos** y **leyendas de figuras** (no listas).
-* **Sin enlaces web** ni bibliografía en esta sección.
-* **Respetar nombres/rutas** exactamente como en el TXT.
-* **Evitar muletillas** y repeticiones; párrafos de 4–8 líneas aprox.
-* **Ajustar terminología** al stack detectado (Bloc/Redux/Controllers, rutas, endpoints).
-
----
-
-### PLANTILLA ÚNICA (para reutilizar dentro de cada HU con ciclos flexibles)
-
-**4.3.3.X. Historia de Usuario N: [Nombre]**
-La información detallada se encuentra en el [Anexo …]. Esta funcionalidad atiende [propósito/beneficio] y se implementa principalmente en [rutas/archivos clave]. En el uso real, [escena breve]. [Puente con la HU anterior].
-
-En cuanto a la **interfaz**, [qué ve/hace el usuario; estados, mensajes, accesibilidad], disponible mediante [ruta/router/navegación] en [archivo de vista]. Se priorizó [legibilidad/accesibilidad/consistencia] para [impacto].
-*Figura N. Interfaz de [archivo], vista general.*
-*(Opcional) Figura N+1. Variante móvil/escritorio o estado relevante.*
-
-En la **lógica**, [flujo: vista → controlador/BLoC/hook/Redux → service/repository/usecase], con [validaciones/errores/estados] y navegación posterior a [pantalla/estado]. Cuando corresponde, se comunica con [API/servicio] mediante [librería] hacia [/endpoint método], interpretando la respuesta para [resultado].
-*Figura N+… Código de [archivo] (acción principal).*
-*Figura N+… Código de [archivo] (validaciones/estado/errores).*
-
-[Si aplica BD/Infra] Respecto a la **persistencia/infra**, la HU interactúa con [tabla/colección/nodo/config] definida en [archivo], utilizando los campos [x, y, z] y las restricciones [únicos/foráneas/índices]. La lectura/escritura se realiza en [archivo y método], garantizando [consistencia/seguridad].
-*Figura N+… Estructura/DER/migración/panel de [entidad].*
+D) Base de datos / Persistencia / Infra (si aplica)
+Tablas/relaciones/índices; consultas DML/DQL; punto exacto de lectura/escritura; CORS/puerto si consta.
+Figura N+… Esquema/DDL/consulta en [.sql] o controlador.*
 [Si no aplica] [Sin interacción con BD en esta HU]
 
-[Si la HU es completa y no trajo tareas] En términos de ejecución, este resultado sugiere tareas implícitas como [diseño de interfaz], [validación], [orquestación de estado], [consumo de API/RTDB/streaming] y [pruebas básicas].
+E) Tareas inferidas (si HU completa y sin tareas provistas)
+Un párrafo: diseño UI, validación, orquestación de estado, consumo API/consultas compuestas, pruebas básicas, mensajes.
 
-**Puente**. Con esta base, el siguiente módulo extiende la experiencia hacia [HU siguiente].
+F) Cierre con puente
+Conecta con la siguiente HU (“Con esta base…”, “Bajo el mismo patrón…”).
+
+Dentro de la HU: solo párrafos y leyendas de figuras (no listas).
+
+8) Figuras y tablas: numeración y estilo
+
+Numeración global y secuencial: Figura 1, 2… / Tabla 1, 2… (no reiniciar por sprint).
+
+Cada mini-bloque cierra con sus leyendas.
+
+Formato: Figura N. [Interfaz/Código/Modelo/Infra/Gráfico] de [archivo/entidad/pantalla], [contexto breve].
+
+“Vista móvil/escritorio” solo si hay evidencia de ambas.
+
+Puede incluirse rango de líneas (p. ej., loginPage.jsx, L40–L85).
+
+9) Secciones ágiles y de calidad (multi-sprint)
+
+Soporta varios sprints (1, 2, 3, 4…) y Daily de 10–20 min.
+
+Si el usuario no especifica asignación por sprint y entrega solo backlog, no adivines: documenta HU secuenciales y, en el Resumen de Cobertura, indica “Asignación de sprint no especificada”.
+
+Si indica sprint por HU, agrupa y coloca Daily/Review/Retrospective por sprint.
+
+Si el Sprint 2 llega con solo algunas HU, documéntalas y marca el resto como omitidas si están incompletas.
+
+9.1 Sprint — Daily Scrum
+
+Duración (≈10–20 min), hechos/impedimentos/siguientes pasos; herramienta (Jira/Trello) y vínculo con HU.
+Figura N. Burndown del Sprint.
+(Opcional) Figura N+1. Tablero (Jira/Trello).
+(Opcional) Tabla N. Sprint Backlog/Tareas.
+
+9.2 Sprint Review
+
+Participantes, incremento validado (p. ej., módulo bodega/maquinaria/cuaderno), referencia a anexos de aceptación.
+
+9.3 Unit testing
+
+Enfoque (caja blanca/negra), herramienta (p. ej., Mocha para Node; React Testing Library si procede); objetivo (login/bodega/cuaderno).
+Figura N. Evidencia del caso de prueba.
+
+9.4 Retrospective & Planning/Backlog
+
+Resumen narrativo (qué salió bien/mal, mejoras). Si hay tabla, referenciarla como Tabla N. Retrospectiva/Backlog.
+
+10) Toque humano (sin perder rigor)
+
+Incluye 1–2 frases por HU que conecten con la experiencia del usuario (fluidez, confianza, trazabilidad, rapidez en tareas repetitivas), justifiquen decisiones UX (legibilidad, consistencia, accesibilidad, confirmaciones explícitas de riesgo como eliminación) o vinculen con el propósito (eficiencia operativa, control de inventario, visibilidad de recursos).
+
+10.1 Micro-transiciones
+
+Dentro de HU: “Asimismo…”, “Por su parte…”, “De este modo…”, “En coherencia con…”, “Como resultado…”.
+Cierre de HU → siguiente: “Con esta base…”, “Tras consolidar…”, “Bajo el mismo patrón…”, “A partir del acceso autenticado…”.
+
+11) Salidas finales obligatorias
+
+Resumen de Cobertura y Trazabilidad (un párrafo): HU documentadas vs. omitidas; 2–3 archivos nucleares recurrentes (router, loginPage.jsx, server.js, db.js/connection.js, endpoints por dominio: wharehouse.js, works.js, machinery.js, recomendation.js, harvest.js, staff.js; custom hooks como useFetch.jsx; DDL MySQL como users, works, machinery, harvest, etc.; CORS/puerto si aplica).
+
+Historias de Usuario omitidas por incompletas (máx. 2–3 oraciones en total): lista por nombre y causa técnica (vista no montada, método no invocado, endpoint no consumido, tabla no creada/consultada, confirmación no conectada, query compuesta ausente, guard de rutas inactivo, etc.).
+
+(Opcional) Mapa de trazabilidad por historia (pantallas ↔ hooks/funciones ↔ endpoints ↔ tablas/consultas) en una oración compacta.
+
+12) Actualizaciones y cambios (Modo DIF)
+
+Re-aplica el filtro de completitud HU por HU.
+
+Reescribe solo HU afectadas o recién completas.
+
+Ajusta numeración de figuras/tablas (global); si renumeras muchas, indícalo en el Resumen (“se renumeraron figuras por cambios de interfaz/fragmentos”).
+
+Sintetiza diferencias (“se añadió CORS”, “se parametrizaron consultas MySQL”, “se separaron formularios en componentes”, “se incorporó confirmación de eliminación”, “se integró useFetch.jsx”, “se reemplazó fetch por cliente HTTP”).
+
+13) Plantillas MINI universales (un solo ejemplo ilustrativo por patrón)
+
+Usa extensiones genéricas ([Componente].vue|.jsx|.dart|.php|.js|.ts|.sql) y adapta a nombres reales del TXT. Respeta typos en archivos si existen.
+
+13.1–13.24 (plantillas previas)
+
+Se mantienen tal cual (lista→detalle, React/MUI/Formik/Axios, DRF, QR base64, tarjetas con estado, Flutter búsqueda/offline/AR, Angular+Firebase, Mapas, Streaming, Pinia+Auth, roles/guards, CRUD Firestore, PDF+QR, timeline, Flutter POST a API, PHP+cURL con token, Express+JWT, asignación por zona, ruteo por proximidad, mapa con estados, cambio de estado, perfil web, Mocha).
+
+13.25 React + Express + MySQL: Login y sesión
+
+[UI] [loginPage].jsx con campos email/password y feedback; al éxito redirige a interfaz principal con menú y “dropdown” Cerrar sesión.
+[Back] server.js con CORS, db/connection.js a MySQL, endpoint POST /auth/login que consulta users (parámetros) y responde 200/401.
+[BD] users(email_user, password_user, …); hash recomendado (si aparece texto plano, documentar tal cual y sugerir mejora en Micro-toque).
+Figura N. Interfaz de login.
+Figura N+1. Endpoint de login (Express).
+Figura N+2. DDL/consulta de users.
+
+13.26 Tabla/Grilla con búsqueda (React)
+
+[UI] [warehouse].jsx lista productos; input de búsqueda, acciones (editar/eliminar) al extremo derecho; modal de confirmación al eliminar.
+[Código] table.jsx reutilizable (props: columnas, dataset, onEdit/onDelete); hook useFetch.jsx (loading/error/data).
+Figura N. Vista de Bodega.
+Figura N+1. Componente table.jsx (props y render).
+
+13.27 Endpoints de Bodega (Express + MySQL)
+
+[API] wharehouse.js con rutas REST: GET /warehouse, POST /warehouse, PUT /warehouse/:id, DELETE /warehouse/:id; queries parametrizadas y manejo de 2xx/4xx/5xx.
+Figura N. Rutas y controladores de bodega.
+
+13.28 Formularios CRUD de productos (React)
+
+[UI] [addProductForm].jsx, [editProductForm].jsx; validaciones mínimas; toast de confirmación; modal de confirmación de eliminación.
+[Código] Submit → POST/PUT al endpoint; al éxito, refresca lista (invalidate/re-fetch) y cierra modal.
+Figura N. Formulario de agregación.
+Figura N+1. Confirmación de eliminación.
+
+13.29 Faenas: resumen + tablas relacionadas
+
+[UI] [control].jsx muestra faenas (fecha inicio/fin, observaciones) con botones de editar/ver detalles.
+[API] works.js consulta works y detalles: input_details, machinery_details, labour_details (JOIN/consultas encadenadas).
+[BD] DDL de tablas y FK/índices (si constan).
+Figura N. Interfaz de Faenas.
+Figura N+1. Endpoints de faenas.
+
+13.30 Faenas: creación/edición (React + Express)
+
+[UI] Formularios [addWorkForm].jsx/modales para mano de obra, maquinaria e insumos.
+[API] Endpoints POST/PUT en works.js; transaccionalidad si aparece (o secuencia de consultas con rollback manual si se ve).
+Figura N. Formulario de agregación de faena.
+Figura N+1. Endpoints de creación/edición.
+
+13.31 Maquinaria: listado y alta (S1/S2)
+
+[UI] [machinery].jsx (listado) y [addMachineryForm].jsx (alta).
+[API] machinery.js con GET (listado) y POST (alta con validación).
+[BD] DDL de tabla machinery.
+Figura N. Interfaz de maquinaria.
+Figura N+1. Endpoint de inserción.
+
+13.32 Recomendaciones: listado (S2)
+
+[UI] [recomendations].jsx (listado).
+[API] recomendation.js con GET general.
+[BD] DDL recommendations (cosecha, fecha, estado, método, insumos).
+Figura N. Interfaz de recomendaciones.
+Figura N+1. Endpoint de obtención.
+
+13.33 Recomendaciones: alta/edición
+
+[UI] [addRecomendationForm].jsx y [editRecomendationForm].jsx (relleno previo).
+[API] GET (cargar una), POST (insertar), PUT (actualizar).
+Figura N. Formulario de alta.
+Figura N+1. Endpoints CRUD.
+
+13.34 Cosechas: listado y relaciones
+
+[UI] [harvestControl].jsx (lote, fechas, cantidad, encargado, estado).
+[API] harvest.js GET /harvest (lista base) y endpoints para mano de obra.
+[BD] harvest (básica) y detail_harvest (relación con personal).
+Figura N. Interfaz de cosechas.
+Figura N+1. Endpoint de listado.
+
+13.35 Cosechas: alta/edición y mano de obra
+
+[UI] [addHarvestForm].jsx, [editHarvestForm].jsx, y formulario para asignar personal.
+[API] GET trabajadores disponibles/ocupados; POST para asignar a detail_harvest.
+Figura N. Formulario de alta de cosecha.
+Figura N+1. Endpoint de asignación.
+
+13.36 Cuaderno de campo: resumen (mix cosechas + faenas)
+
+[UI] [fieldNotebook].jsx muestra tabla combinada (tipo de registro, fechas, costos/resumen).
+[API] Endpoint que combina (JOIN/UNION o Promise.all) resultados de cosechas y faenas.
+Figura N. Interfaz del cuaderno de campo (resumen).
+Figura N+1. Endpoint de combinación.
+
+13.37 Cuaderno de campo: detalle (recursos asociados)
+
+[UI] [harvestDetails].jsx o equivalente; muestra recursos usados por registro.
+[API] Endpoints de detalle con múltiples consultas encadenadas; manejo de promesas y de errores.
+Figura N. Vista de detalle del cuaderno.
+Figura N+1. Endpoint de detalle (consultas compuestas).
+
+13.38 Personal: listado y detalle
+
+[UI] [staff].jsx con table.jsx; vista de detalle (faenas/cosechas asociadas).
+[API] staff.js GET /staff; endpoints para obtener detalle por empleado.
+Figura N. Interfaz de personal.
+Figura N+1. Endpoint de personal.
+
+13.39 Personal: alta/edición/eliminación con confirmación
+
+[UI] [addStaffForm].jsx / [editStaffForm].jsx; modal de confirmación para eliminar; mensajes de éxito/error.
+[API] staff.js con GET/POST/PUT/DELETE parametrizados.
+Figura N. Alta de personal.
+Figura N+1. Endpoints CRUD de personal.
+
+13.40 Menú principal tras login + “dropdown” de usuario
+
+[UI] Vista principal con navegación a módulos (bodega, faenas, maquinaria, recomendaciones, cosechas, cuaderno, personal) y “dropdown” con Cerrar sesión.
+[Código] Estado global/sesión; al cerrar sesión, limpia credenciales y redirige a /login.
+Figura N. Interfaz principal (post-login).
+
+14) Ponderación y selección de ejemplos
+
+Prioriza fragmentos sólidos (UI conectada + endpoint operativo + consulta real).
+
+Un solo ejemplo ilustrativo por patrón.
+
+Fragmentos débiles solo como contexto; no completes lo inexistente.
+
+15) Recordatorios finales
+
+Dentro de las HU: solo párrafos y leyendas de figuras (no listas).
+
+Sin enlaces web ni bibliografía en esta sección.
+
+Respetar nombres/rutas exactamente como en el TXT (incluidos typos).
+
+Evitar muletillas y repeticiones; párrafos de 4–8 líneas aprox.
+
+Ajustar terminología al stack detectado (hooks/Redux/Stores/Controllers, rutas, endpoints, consultas SQL).
