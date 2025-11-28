@@ -1,6 +1,22 @@
-──▶ PROMPT MAESTRO — Documentación Técnica de Historias de Usuario (Universal, Expandible, Multi-Stack) ◀──
+Se debe escribir los parrafos de documentación del sprint, para cada historia de usuario.
 
-Principio rector: Este prompt se amplía con cada nuevo ejemplo. No se sobrescribe lo aprendido. Integra y combina patrones, manteniendo una redacción académica con toque humano, y una verificación rigurosa de completitud por historia (HU). Si existen nombres con errores tipográficos en archivos/rutas (p. ej., wharehouse.js, recomendation.js), se respetan tal cual al citarlos.
+Contexto para mi caso especifico:
+Arquitectura y capas (Clean Architecture)
+Respeta SIEMPRE esta estructura y dirección de dependencias:
+
+core
+features:
+- `presentation` → depende de → `domain` → depende de → `data`.
+- `domain`:
+  - Define `entities`, interfaces de `repositories` y `usecases`.
+- `data`:
+  - Implementa los `repositories` del domain.
+  - Define `datasources` y `models`.
+  - Mapea `models ↔ entities`.
+- `presentation`:
+  - `blocs`: toda la lógica de estado.
+  - `pages`: orquestan, instancian widgets y conectan BLoCs (por inyección/proveedores).
+  - `widgets`: componentes reutilizables de UI.
 
 1) Rol y voz narrativa
 
@@ -132,7 +148,10 @@ Si falta una arista (ruta no montada, método no invocado, tabla ausente, valida
 
 6) Reglas de oro
 
-No inventar: cita solo archivos/clases/funciones/rutas/endpoints/modelos/consultas existentes y conectados.
+Por cada historia de usuario:
+son parrafos... [figuras...], son parrafos... [figuras...], ...
+
+No inventar: cita solo archivos/clases/funciones/rutas/endpoints/modelos/consultas existentes y conectados. -> archivos.extensión
 
 BD opcional: si la HU no usa BD/endpoint, anota [Sin interacción con BD en esta HU].
 
@@ -142,7 +161,13 @@ No código huérfano (vista/endpoint/método sin uso).
 
 No exponer secretos: menciona “variables de entorno/credenciales/clave/SDK” sin imprimir valores.
 
+
+Después de cada parrafo, van las figuras.
+
+Si, tambien en los parrafos, por ejemplo una figura viene a ser una captura de pantalla de cada codigo, pero que segun avanzan las historias de usuario, si ya se nombraron anteriormente, no se vuelve a repetir esa figura como imagen, si se puede hablar haciendo alusión a esa figura previamente colocada en otra historia de usuario... ejemplo (figura #. main.dart , figura #. auth_routes.dart , ... etc )
 7) Estructura flexible por HU (ciclos Párrafos ↔ Figuras)
+
+Son parrafos detallados.
 
 4.3.3.X. Historia de Usuario N: [Nombre]
 
@@ -182,6 +207,8 @@ Endpoint(s) (ruta, método, payload con Excel/CSV, validaciones, respuesta JSON)
 Figuras: fragmentos de verificación de columnas, entrenamiento y respuesta JSON.
 
 8) Figuras y tablas: numeración y estilo
+
+No te olvidades de colocar las figuras (no esta limitado).
 
 Numeración global y secuencial: Figura 1, 2… / Tabla 1, 2… (no reiniciar por sprint).
 

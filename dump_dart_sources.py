@@ -1,20 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Dart Dump Builder (GUI) — perfiles múltiples + modos de salida + EXTRAS con exclusiones
---------------------------------------------------------------------------------------
-• /lib con filtro por extensiones y exclusiones.
-• EXTRAS: archivo, glob o carpeta con diálogo propio para excluir subcarpetas/archivos.
+Dart Dump Builder (GUI) — multi-perfiles, salida personalizable, raíces múltiples y preferencias
+-----------------------------------------------------------------------------------------------
+• Raíces fuente configurables (p. ej., lib, src, app, packages, etc.).
+• EXTRAS: archivo, glob o carpeta con diálogo para excluir subcarpetas/archivos.
 • Perfiles:
-    - Guardar / Cargar (combobox y diálogos).
-    - Activar varios perfiles a la vez (fusión por unión).
-• Modos de salida:
-    - Contenido (selección) [DEFAULT]
-    - Solo estructura (sin contenido)
-    - Selección con contenido + resto como estructura
-• Genera un TXT con encabezados de carpeta y líneas 'ruta/archivo.ext>'.
+    - Guardar / Cargar (combobox y diálogos con lista; sin escribir nombres).
+    - Activar varios perfiles a la vez (fusión por unión) con panel visible de “Perfiles activos”.
+• Salida personalizable:
+    - Modos: Contenido (selección) [DEFAULT] / Solo estructura / Selección + resto estructura.
+    - Separador por archivo: carácter, ancho fijo o auto, y marcador END opcional.
+• Preferencias globales persistentes (JSON): raíces, extensiones, exclusiones, salida, separadores, etc.
 
-Probado con Python 3.13.7.
+Probado con Python 3.13.9.
 """
 
 from __future__ import annotations
@@ -23,30 +22,91 @@ import json
 import os
 import sys
 import glob as _glob
+from datetime import datetime
 from dataclasses import dataclass
-from typing import Any, Dict, Iterable, List, Optional, Set, TextIO, Tuple, cast
+from typing import Any, Dict, Iterable, List, Optional, Set, TextIO, Tuple, cast, TypedDict
 
 # --- Tkinter ---
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, simpledialog
-
 
 # =================== CONFIG GLOBAL ===================
 
 DEFAULT_PROJECT_ROOT: str = (
     "C:/Users/marqu/Programacion/App100MujeresTrabajando/flutter_application_emprendedoras"
 )
-DEFAULT_EXTENSIONS: str = "dart"
+
+DEFAULT_SOURCE_ROOTS: str = "lib"           # ahora múltiple: "lib,src,app"
+DEFAULT_EXTENSIONS: str = "dart"            # extensiones (coma) p/raíz (todas iguales por ahora)
 DEFAULT_EXCLUDES: str = ".git,build,.dart_tool,.idea,.vscode"
 
 PROFILE_STORE: str = os.path.expanduser("~/.dart_dump_gui_profiles.json")
+PREFS_STORE: str = os.path.expanduser("~/.dart_dump_gui_prefs.json")
+
+# ---------------- Tipado de preferencias ----------------
+
+class Prefs(TypedDict, total=False):
+    project_root: str
+    source_roots: str
+    extensions: str
+    excludes: str
+    filename_only: bool
+    verbose: bool
+    output_mode: str
+    sep_char: str
+    sep_width: int
+    sep_auto: bool
+    sep_print_end: bool
 
 # =====================================================
 
+def _load_json(path: str) -> Dict[str, Any]:
+    if not os.path.isfile(path):
+        return {}
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            return json.load(fh)
+    except Exception:
+        return {}
+
+def _save_json(path: str, data: Dict[str, Any]) -> None:
+    try:
+        with open(path, "w", encoding="utf-8") as fh:
+            json.dump(data, fh, indent=2, ensure_ascii=False)
+    except Exception as e:
+        # messagebox puede no existir en entornos sin GUI; protegemos
+        try:
+            messagebox.showwarning("Aviso", f"No se pudo guardar en {path}:\n{e}")
+        except Exception:
+            sys.stderr.write(f"[WARN] No se pudo guardar en {path}: {e}\n")
+
+def _load_profile_store() -> Dict[str, Any]:
+    return _load_json(PROFILE_STORE)
+
+def _save_profile_store(store: Dict[str, Any]) -> None:
+    _save_json(PROFILE_STORE, store)
+
+def _load_prefs() -> Prefs:
+    data: Dict[str, Any] = _load_json(PREFS_STORE)
+    prefs: Prefs = {}
+    if "project_root" in data:     prefs["project_root"] = str(data["project_root"])
+    if "source_roots" in data:     prefs["source_roots"] = str(data["source_roots"])
+    if "extensions" in data:       prefs["extensions"] = str(data["extensions"])
+    if "excludes" in data:         prefs["excludes"] = str(data["excludes"])
+    if "filename_only" in data:    prefs["filename_only"] = bool(data["filename_only"])
+    if "verbose" in data:          prefs["verbose"] = bool(data["verbose"])
+    if "output_mode" in data:      prefs["output_mode"] = str(data["output_mode"])
+    if "sep_char" in data:         prefs["sep_char"] = str(data["sep_char"])[:1] or "-"
+    if "sep_width" in data:        prefs["sep_width"] = int(data["sep_width"])
+    if "sep_auto" in data:         prefs["sep_auto"] = bool(data["sep_auto"])
+    if "sep_print_end" in data:    prefs["sep_print_end"] = bool(data["sep_print_end"])
+    return prefs
+
+def _save_prefs(prefs: Prefs) -> None:
+    _save_json(PREFS_STORE, dict(prefs))
 
 def sorted_casefold(items: Iterable[str]) -> List[str]:
     return sorted(items, key=lambda s: s.casefold())
-
 
 def dir_header(depth: int, dirname: str) -> str:
     if depth == 1:
@@ -57,62 +117,22 @@ def dir_header(depth: int, dirname: str) -> str:
         indent = "    " * (depth - 1)
         return f"{indent}/{dirname}:\n"
 
-
-def write_file_block(out_fh: TextIO, file_abs_path: str, root_for_rel: str, filename_only: bool) -> int:
-    """Escribe 'ruta>' + contenido + dos saltos. Devuelve aprox. bytes del contenido."""
-    rel = os.path.relpath(file_abs_path, root_for_rel).replace(os.sep, "/")
-    header = os.path.basename(rel) if filename_only else rel
-    out_fh.write(f"{header}>\n")
-    written = 0
-    try:
-        with open(file_abs_path, "r", encoding="utf-8", errors="ignore") as fh:
-            content = fh.read()
-            out_fh.write(content)
-            written = len(content)
-    except Exception as e:  # archivo ausente o sin permisos
-        msg = f"[ERROR al leer el archivo: {e}]\n"
-        out_fh.write(msg)
-        written = len(msg)
-    out_fh.write("\n\n")
-    return written
-
-
 CHECK_OFF = "☐"
 CHECK_ON = "☑"
 CHECK_PARTIAL = "◩"
 
-
 @dataclass
 class NodeMeta:
-    kind: str              # "root-extras" | "root-lib" | "dir" | "file" | "extra-group"
+    kind: str              # "root-extras" | "root-srcroot" | "dir" | "file" | "extra-group"
     path: str              # absoluta si aplica
     root_for_rel: str      # base para rutas relativas
-    group: str             # "extras" | "lib" | "extras-group" | "dialog"
+    group: str             # "extras" | "<srcroot>" | "extras-group" | "dialog"
     label: str             # texto sin prefijo
     selectable: bool = True
 
-
-# ----------------- Perfiles (persistencia) -----------------
-
-def _load_profile_store() -> Dict[str, Any]:
-    if not os.path.isfile(PROFILE_STORE):
-        return {}
-    try:
-        with open(PROFILE_STORE, "r", encoding="utf-8") as fh:
-            return json.load(fh)
-    except Exception:
-        return {}
-
-
-def _save_profile_store(store: Dict[str, Any]) -> None:
-    with open(PROFILE_STORE, "w", encoding="utf-8") as fh:
-        json.dump(store, fh, indent=2, ensure_ascii=False)
-
-
-# ---------- Diálogo de selección desde carpeta (con exclusiones) ----------
+# ---------- Diálogo selector de carpeta (pre-exclusiones) ----------
 
 class SelectFromFolderDialog(tk.Toplevel):
-    """Árbol navegable de una carpeta para elegir exactamente qué incluir (pre-exclusiones)."""
     def __init__(self, master: tk.Misc, base_dir: str, ext_filter: Optional[Set[str]] = None,
                  title: str = "Seleccionar desde carpeta") -> None:
         super().__init__(master)
@@ -209,13 +229,11 @@ class SelectFromFolderDialog(tk.Toplevel):
             files = sorted_casefold(files)
             parent_node = path_to_node.get(root, self.root_item)
 
-            # Subcarpetas
             for d in dirs:
                 dpath = os.path.join(root, d)
                 node = self._add_dir_node(parent_node, d, dpath, self.base_dir, "dialog")
                 path_to_node[dpath] = node
 
-            # Archivos
             for f in files:
                 if self.ext_filter is not None:
                     ext = f.rsplit(".", 1)[-1].lower() if "." in f else ""
@@ -226,7 +244,6 @@ class SelectFromFolderDialog(tk.Toplevel):
 
         self.tree.item(self.root_item, open=True)
 
-    # --- utilidades internas del diálogo ---
     def _set_item_text(self, item: str, base: str, state: int) -> None:
         prefix = CHECK_OFF if state == 0 else CHECK_ON if state == 1 else CHECK_PARTIAL
         self.tree.item(item, text=f"{prefix} {base}")
@@ -314,7 +331,6 @@ class SelectFromFolderDialog(tk.Toplevel):
         self.wait_window(self)
         return self.result_paths
 
-
 # ---------------- GUI principal ----------------
 
 @dataclass
@@ -322,18 +338,18 @@ class ExtraGroupProfile:
     label: str
     files_rel_to_project: List[str]
 
-
 class DartDumpGUI(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
-        self.title("Dart Dump Builder — EXTRAS + lib/")
-        self.geometry("1220x760")
+        self.title("Dart Dump Builder — EXTRAS + raíces múltiples")
+        self.geometry("1280x820")
 
         # Estado
         self.item_meta: Dict[str, NodeMeta] = {}
         self.item_state: Dict[str, int] = {}
         self.extras_loaded_once: bool = False
-        self.lib_file_nodes: Dict[str, str] = {}
+        self.src_roots_nodes: Dict[str, str] = {}  # root_name -> tree item id
+        self.src_root_files_nodes: Dict[str, Dict[str, str]] = {}  # root_name -> (abs -> item id)
         self.extras_file_nodes: Dict[str, str] = {}
         self.active_profiles: List[str] = []
 
@@ -344,36 +360,54 @@ class DartDumpGUI(tk.Tk):
         top = ttk.Frame(self, padding=8)
         top.pack(fill="x")
 
+        # Carga preferencias si existen
+        prefs = _load_prefs()
+        project_def = prefs.get("project_root", DEFAULT_PROJECT_ROOT)
+        roots_def = prefs.get("source_roots", DEFAULT_SOURCE_ROOTS)
+        exts_def = prefs.get("extensions", DEFAULT_EXTENSIONS)
+        excl_def = prefs.get("excludes", DEFAULT_EXCLUDES)
+        filename_only_def = bool(prefs.get("filename_only", False))
+        verbose_def = bool(prefs.get("verbose", True))
+        output_mode_def = prefs.get("output_mode", "content_selected")
+        sep_char_def = prefs.get("sep_char", "-")
+        sep_width_def = int(prefs.get("sep_width", 80))
+        sep_auto_def = bool(prefs.get("sep_auto", False))
+        sep_end_def = bool(prefs.get("sep_print_end", True))
+
         ttk.Label(top, text="Proyecto:").grid(row=0, column=0, sticky="w")
-        self.project_var = tk.StringVar(value=DEFAULT_PROJECT_ROOT)
-        self.project_entry = ttk.Entry(top, textvariable=self.project_var, width=90)
+        self.project_var = tk.StringVar(value=project_def)
+        self.project_entry = ttk.Entry(top, textvariable=self.project_var, width=82)
         self.project_entry.grid(row=0, column=1, padx=5, sticky="we")
         ttk.Button(top, text="Examinar…", command=self.pick_project).grid(row=0, column=2, padx=2)
 
-        ttk.Label(top, text="Extensiones (lib):").grid(row=1, column=0, sticky="w", pady=(6, 0))
-        self.ext_var = tk.StringVar(value=DEFAULT_EXTENSIONS)
-        ttk.Entry(top, textvariable=self.ext_var, width=24).grid(row=1, column=1, sticky="w", pady=(6, 0))
+        ttk.Label(top, text="Raíces fuente (coma):").grid(row=1, column=0, sticky="w", pady=(6, 0))
+        self.roots_var = tk.StringVar(value=roots_def)
+        ttk.Entry(top, textvariable=self.roots_var, width=48).grid(row=1, column=1, sticky="w", pady=(6, 0))
 
-        ttk.Label(top, text="Excluir carpetas (lib):").grid(row=2, column=0, sticky="w", pady=(6, 0))
-        self.exclude_var = tk.StringVar(value=DEFAULT_EXCLUDES)
-        ttk.Entry(top, textvariable=self.exclude_var, width=48).grid(row=2, column=1, sticky="w", pady=(6, 0))
+        ttk.Label(top, text="Extensiones:").grid(row=2, column=0, sticky="w", pady=(6, 0))
+        self.ext_var = tk.StringVar(value=exts_def)
+        ttk.Entry(top, textvariable=self.ext_var, width=24).grid(row=2, column=1, sticky="w", pady=(6, 0))
 
-        self.filename_only_var = tk.BooleanVar(value=False)
-        self.verbose_var = tk.BooleanVar(value=True)
+        ttk.Label(top, text="Excluir carpetas:").grid(row=3, column=0, sticky="w", pady=(6, 0))
+        self.exclude_var = tk.StringVar(value=excl_def)
+        ttk.Entry(top, textvariable=self.exclude_var, width=48).grid(row=3, column=1, sticky="w", pady=(6, 0))
+
+        self.filename_only_var = tk.BooleanVar(value=filename_only_def)
+        self.verbose_var = tk.BooleanVar(value=verbose_def)
         ttk.Checkbutton(top, text="Encabezado solo nombre de archivo", variable=self.filename_only_var)\
-            .grid(row=1, column=2, sticky="w")
-        ttk.Checkbutton(top, text="Ver progreso en consola", variable=self.verbose_var)\
             .grid(row=2, column=2, sticky="w")
+        ttk.Checkbutton(top, text="Ver progreso en consola", variable=self.verbose_var)\
+            .grid(row=3, column=2, sticky="w")
 
-        ttk.Button(top, text="ESCANEAR", command=self.scan_project).grid(row=0, column=3, rowspan=3, padx=8)
+        ttk.Button(top, text="ESCANEAR", command=self.scan_project).grid(row=0, column=3, rowspan=4, padx=8)
 
         # Perfiles (carga rápida + estado)
-        ttk.Label(top, text="Perfil rápido:").grid(row=3, column=0, sticky="w", pady=(8,0))
-        self.profile_combo = ttk.Combobox(top, state="readonly", values=self._profile_names())
-        self.profile_combo.grid(row=3, column=1, sticky="w", pady=(8,0))
+        ttk.Label(top, text="Perfil rápido:").grid(row=4, column=0, sticky="w", pady=(8,0))
+        self.profile_combo = ttk.Combobox(top, state="readonly", values=self._profile_names(), width=40)
+        self.profile_combo.grid(row=4, column=1, sticky="w", pady=(8,0))
         self.profile_combo.bind("<<ComboboxSelected>>", self._on_quick_profile_selected)
         self.profile_status_var = tk.StringVar(value="Perfiles activos: (ninguno)")
-        ttk.Label(top, textvariable=self.profile_status_var, foreground="#555").grid(row=3, column=2, columnspan=2, sticky="w", padx=(8,0))
+        ttk.Label(top, textvariable=self.profile_status_var, foreground="#555").grid(row=4, column=2, columnspan=2, sticky="w", padx=(8,0))
 
         for i in range(4):
             top.grid_columnconfigure(i, weight=1 if i == 1 else 0)
@@ -423,7 +457,7 @@ class DartDumpGUI(tk.Tk):
         self.tree.bind("<space>", self.on_tree_space)
         self.tree.bind("<Return>", self.on_tree_space)
 
-        # Lado derecho: EXTRAS + Perfiles + Salida
+        # Lado derecho: EXTRAS + Perfiles + Salida + Separadores + Preferencias
         right = ttk.Frame(mid)
         right.pack(side="right", fill="y", padx=8)
 
@@ -443,17 +477,41 @@ class DartDumpGUI(tk.Tk):
         ttk.Button(prof_box, text="Activar (multi)…", command=self.activate_profiles_dialog).pack(fill="x", pady=1)
         ttk.Button(prof_box, text="Borrar…", command=self.delete_profile_dialog).pack(fill="x", pady=1)
 
+        # Panel “Perfiles activos (fusión)”
+        active_box = ttk.LabelFrame(right, text="Perfiles activos (fusión)", padding=8)
+        active_box.pack(fill="x", pady=(2, 6))
+        self.active_list = tk.Listbox(active_box, height=5)
+        self.active_list.pack(fill="x")
+        ttk.Button(active_box, text="Desactivar todos", command=self._clear_active_profiles).pack(fill="x", pady=(6,0))
+
         # --- Controles de salida ---
         out_box = ttk.LabelFrame(right, text="Salida", padding=8)
         out_box.pack(fill="x", pady=(6, 2))
 
-        self.output_mode_var = tk.StringVar(value="content_selected")
+        self.output_mode_var = tk.StringVar(value=output_mode_def)
         ttk.Radiobutton(out_box, text="Contenido (selección)", value="content_selected",
                         variable=self.output_mode_var).pack(anchor="w")
         ttk.Radiobutton(out_box, text="Solo estructura (sin contenido)", value="structure_only",
                         variable=self.output_mode_var).pack(anchor="w")
         ttk.Radiobutton(out_box, text="Selección con contenido + resto estructura",
                         value="selected_plus_structure", variable=self.output_mode_var).pack(anchor="w")
+
+        # --- Separadores ---
+        sep_box = ttk.LabelFrame(right, text="Separadores", padding=8)
+        sep_box.pack(fill="x", pady=(6, 2))
+        ttk.Label(sep_box, text="Carácter:").grid(row=0, column=0, sticky="w")
+        self.sep_char_var = tk.StringVar(value=sep_char_def)
+        ttk.Entry(sep_box, textvariable=self.sep_char_var, width=4).grid(row=0, column=1, sticky="w", padx=(4,8))
+
+        ttk.Label(sep_box, text="Ancho:").grid(row=0, column=2, sticky="w")
+        self.sep_width_var = tk.IntVar(value=sep_width_def)
+        ttk.Spinbox(sep_box, from_=20, to=200, textvariable=self.sep_width_var, width=6).grid(row=0, column=3, sticky="w", padx=(4,8))
+
+        self.sep_auto_var = tk.BooleanVar(value=sep_auto_def)
+        ttk.Checkbutton(sep_box, text="Auto ancho", variable=self.sep_auto_var).grid(row=0, column=4, sticky="w")
+
+        self.sep_end_var = tk.BooleanVar(value=sep_end_def)
+        ttk.Checkbutton(sep_box, text="Imprimir END", variable=self.sep_end_var).grid(row=1, column=0, columnspan=5, sticky="w", pady=(6,0))
 
         # --- BOTTOM ---
         bottom = ttk.Frame(self, padding=8)
@@ -473,13 +531,17 @@ class DartDumpGUI(tk.Tk):
         self.item_meta[self.extras_root] = NodeMeta("root-extras", "", "", "extras", "EXTRAS", selectable=True)
         self.item_state[self.extras_root] = 1
 
-        self.lib_root_item = self.tree.insert("", "end", text="lib (sin escanear)", open=True)
-        self.item_meta[self.lib_root_item] = NodeMeta("root-lib", "", "", "lib", "lib", selectable=True)
-        self.item_state[self.lib_root_item] = 1
-
         ttk.Label(self, foreground="#666",
-                  text="Tip: Usa el combobox para cargar rápido un perfil. 'Activar (multi)' fusiona perfiles para trabajar a la vez.")\
+                  text="Tip: ‘Activar (multi)’ fusiona perfiles (unión). La lista ‘Perfiles activos’ muestra los aplicados.")\
             .pack(fill="x", padx=8, pady=(0, 6))
+
+        # Menú Preferencias
+        menu = tk.Menu(self)
+        self.config(menu=menu)
+        pref_menu = tk.Menu(menu, tearoff=0)
+        menu.add_cascade(label="Preferencias", menu=pref_menu)
+        pref_menu.add_command(label="Guardar como predeterminadas", command=self.save_prefs)
+        pref_menu.add_command(label="Restaurar predeterminadas", command=self.restore_prefs)
 
     # ------------------- Helpers GUI -------------------
 
@@ -498,10 +560,17 @@ class DartDumpGUI(tk.Tk):
 
     def _refresh_profile_ui(self) -> None:
         self.profile_combo["values"] = self._profile_names()
-        if self.active_profiles:
-            self.profile_status_var.set("Perfiles activos: " + ", ".join(self.active_profiles))
-        else:
-            self.profile_status_var.set("Perfiles activos: (ninguno)")
+        self.profile_status_var.set(
+            "Perfiles activos: " + (", ".join(self.active_profiles) if self.active_profiles else "(ninguno)")
+        )
+        # Pinta listbox
+        self.active_list.delete(0, tk.END)
+        for n in self.active_profiles:
+            self.active_list.insert(tk.END, n)
+
+    def _clear_active_profiles(self) -> None:
+        self.active_profiles = []
+        self._refresh_profile_ui()
 
     def pick_project(self) -> None:
         path = filedialog.askdirectory(title="Selecciona la carpeta del proyecto")
@@ -511,7 +580,7 @@ class DartDumpGUI(tk.Tk):
     def pick_output(self) -> None:
         proj = self.project_var.get().strip()
         base = os.path.basename(os.path.normpath(proj)) or "proyecto"
-        default_name = f"{base}_dart_sources.txt"
+        default_name = f"{base}_sources.txt"
         path = filedialog.asksaveasfilename(
             title="Guardar archivo de texto",
             defaultextension=".txt",
@@ -529,7 +598,7 @@ class DartDumpGUI(tk.Tk):
         if not meta or not meta.selectable:
             return
         cur = self.item_state.get(item, 0)
-        is_dirlike = meta.kind in {"root-extras", "root-lib", "dir", "extra-group"}
+        is_dirlike = meta.kind in {"root-extras", "root-srcroot", "dir", "extra-group"}
         if is_dirlike:
             self.set_state_recursive(item, cur != 1)
             self.recompute_parent_states(item)
@@ -568,7 +637,7 @@ class DartDumpGUI(tk.Tk):
         self.recompute_parent_states(parent)
 
     def toggle_all(self, on: bool) -> None:
-        for root in (self.extras_root, self.lib_root_item):
+        for root in list(self.src_roots_nodes.values()) + [self.extras_root]:
             self.set_state_recursive(root, on)
 
     def expand_collapse_all(self, expand: bool) -> None:
@@ -576,8 +645,8 @@ class DartDumpGUI(tk.Tk):
             self.tree.item(it, open=expand)
             for ch in self.tree.get_children(it):
                 _walk(ch)
-        _walk(self.extras_root)
-        _walk(self.lib_root_item)
+        for root in list(self.src_roots_nodes.values()) + [self.extras_root]:
+            _walk(root)
 
     # ------------------- Escaneo -------------------
 
@@ -592,6 +661,12 @@ class DartDumpGUI(tk.Tk):
         if not raw:
             return set()
         return {e.strip() for e in raw.split(",") if e.strip()}
+
+    def parse_roots(self) -> List[str]:
+        raw = self.roots_var.get().strip()
+        if not raw:
+            return ["lib"]
+        return [r.strip().strip("\\/") for r in raw.split(",") if r.strip()]
 
     def clear_children(self, item: str) -> None:
         for ch in self.tree.get_children(item):
@@ -608,53 +683,69 @@ class DartDumpGUI(tk.Tk):
         node = self.tree.insert(parent, "end", text=f"{CHECK_ON if default_on else CHECK_OFF} {label}", open=False)
         self.item_meta[node] = NodeMeta("file", path, root_for_rel, group, label, selectable=True)
         self.item_state[node] = 1 if default_on else 0
-        absn = os.path.normcase(os.path.abspath(path))
-        if group == "lib":
-            self.lib_file_nodes[absn] = node
-        else:
-            self.extras_file_nodes[absn] = node
+        if group not in self.src_root_files_nodes:
+            self.src_root_files_nodes[group] = {}
+        self.src_root_files_nodes[group][os.path.normcase(os.path.abspath(path))] = node
         return node
 
+    def _prepare_srcroot(self, project_root: str, root_name: str) -> Optional[str]:
+        root_path = os.path.join(project_root, root_name)
+        if not os.path.isdir(root_path):
+            return None
+        # crea root en árbol
+        root_item = self.tree.insert("", "end", text=f"{root_name} (sin escanear)", open=True)
+        self.item_meta[root_item] = NodeMeta("root-srcroot", root_path, root_path, root_name, root_name, selectable=True)
+        self.item_state[root_item] = 1
+        self.src_roots_nodes[root_name] = root_item
+        return root_item
+
     def scan_project(self) -> None:
+        # limpiar raíces previas
+        for node in list(self.src_roots_nodes.values()):
+            try:
+                self.tree.delete(node)
+            except Exception:
+                pass
+        self.src_roots_nodes.clear()
+        self.src_root_files_nodes.clear()
+
         project_root = self.project_var.get().strip()
         if not project_root or not os.path.isdir(project_root):
             messagebox.showerror("Error", "Selecciona una ruta de proyecto válida.")
             return
 
-        lib_path = os.path.join(project_root, "lib")
-        if not os.path.isdir(lib_path):
-            messagebox.showerror("Error", "No se encontró la carpeta 'lib' en el proyecto.")
-            return
-
-        # Reset mapas
-        self.lib_file_nodes.clear()
-
-        # Preparar lib root
-        self.tree.item(self.lib_root_item, text="lib")
-        self.item_meta[self.lib_root_item] = NodeMeta("root-lib", lib_path, lib_path, "lib", "lib", selectable=True)
-        self.item_state[self.lib_root_item] = 1
-        self.clear_children(self.lib_root_item)
-
         allowed_exts = self.parse_exts()
         excludes = self.parse_excludes()
+        roots = self.parse_roots()
 
-        entries = os.listdir(lib_path)
-
-        # 1) Archivos en lib/
-        top_files = [e for e in entries if os.path.isfile(os.path.join(lib_path, e))]
-        for f in sorted_casefold(top_files):
-            ext = f.rsplit(".", 1)[-1].lower() if "." in f else ""
-            if ext in allowed_exts:
-                self.add_file_node(self.lib_root_item, f, os.path.join(lib_path, f), lib_path, "lib", default_on=True)
-
-        # 2) Subcarpetas
-        top_dirs = [e for e in entries if os.path.isdir(os.path.join(lib_path, e))]
-        for d in sorted_casefold(top_dirs):
-            if d in excludes:
+        for root_name in roots:
+            root_item = self._prepare_srcroot(project_root, root_name)
+            if not root_item:
                 continue
-            dir_path = os.path.join(lib_path, d)
-            node = self.add_dir_node(self.lib_root_item, d, dir_path, lib_path, "lib")
-            self.populate_lib_dir(node, dir_path, lib_path, allowed_exts, excludes)
+            root_path = os.path.join(project_root, root_name)
+            self.tree.item(root_item, text=root_name)
+
+            # Limpieza por si re-escaneo
+            self.clear_children(root_item)
+
+            entries = os.listdir(root_path)
+            # archivos top
+            top_files = [e for e in entries if os.path.isfile(os.path.join(root_path, e))]
+            for f in sorted_casefold(top_files):
+                ext = f.rsplit(".", 1)[-1].lower() if "." in f else ""
+                if ext in allowed_exts:
+                    self.add_file_node(root_item, f, os.path.join(root_path, f), root_path, root_name, default_on=True)
+
+            # subcarpetas
+            top_dirs = [e for e in entries if os.path.isdir(os.path.join(root_path, e))]
+            for d in sorted_casefold(top_dirs):
+                if d in excludes:
+                    continue
+                dir_path = os.path.join(root_path, d)
+                node = self.add_dir_node(root_item, d, dir_path, root_path, root_name)
+                self.populate_dir(node, dir_path, root_path, allowed_exts, excludes, root_name)
+
+            self.tree.item(root_item, open=True)
 
         # EXTRAS por defecto la primera vez
         if not self.extras_loaded_once:
@@ -662,10 +753,9 @@ class DartDumpGUI(tk.Tk):
             self.extras_loaded_once = True
 
         self.tree.item(self.extras_root, open=True)
-        self.tree.item(self.lib_root_item, open=True)
 
-    def populate_lib_dir(self, parent: str, dir_path: str, lib_root: str,
-                         allowed_exts: Set[str], excludes: Set[str]) -> None:
+    def populate_dir(self, parent: str, dir_path: str, root_path: str,
+                     allowed_exts: Set[str], excludes: Set[str], group_name: str) -> None:
         try:
             entries = os.listdir(dir_path)
         except PermissionError:
@@ -675,15 +765,15 @@ class DartDumpGUI(tk.Tk):
         for f in sorted_casefold(files):
             ext = f.rsplit(".", 1)[-1].lower() if "." in f else ""
             if ext in allowed_exts:
-                self.add_file_node(parent, f, os.path.join(dir_path, f), lib_root, "lib", default_on=True)
+                self.add_file_node(parent, f, os.path.join(dir_path, f), root_path, group_name, default_on=True)
 
         dirs = [e for e in entries if os.path.isdir(os.path.join(dir_path, e))]
         for d in sorted_casefold(dirs):
             if d in excludes:
                 continue
             dpath = os.path.join(dir_path, d)
-            node = self.add_dir_node(parent, d, dpath, lib_root, "lib")
-            self.populate_lib_dir(node, dpath, lib_root, allowed_exts, excludes)
+            node = self.add_dir_node(parent, d, dpath, root_path, group_name)
+            self.populate_dir(node, dpath, root_path, allowed_exts, excludes, group_name)
 
         self.recompute_parent_states(parent)
 
@@ -734,7 +824,6 @@ class DartDumpGUI(tk.Tk):
         self.item_meta[group_node] = NodeMeta("extra-group", "", proj, "extras-group", f"[{label_group}]", selectable=True)
         self.item_state[group_node] = 1
 
-        # Anidar preservando jerarquía
         path_to_node: Dict[str, str] = {"": group_node}
         for abs_path in sorted(selected, key=lambda p: p.casefold()):
             rel = os.path.relpath(abs_path, proj).replace(os.sep, "/")
@@ -792,8 +881,8 @@ class DartDumpGUI(tk.Tk):
 
     # ----------------- Recolección / escritura -----------------
 
-    def _gather_files_with_selected_flag(self, root_item: str) -> List[Tuple[str, str, bool]]:
-        """Lista (abs_path, root_rel, is_selected) en el orden del árbol."""
+    def _gather_files_selected_by_root(self, root_item: str) -> List[Tuple[str, str, bool]]:
+        """Lista (abs_path, root_rel, is_selected) siguiendo el árbol."""
         result: List[Tuple[str, str, bool]] = []
         def walk(it: str) -> None:
             state = self.item_state.get(it, 0)
@@ -807,31 +896,60 @@ class DartDumpGUI(tk.Tk):
         walk(root_item)
         return result
 
+    def _gather_all_src_roots(self) -> List[Tuple[str, str]]:
+        """Retorna pares (root_name, root_path_itemid)."""
+        return [(name, item_id) for name, item_id in self.src_roots_nodes.items()]
+
+    def _separator_line(self, text: str, is_end: bool) -> str:
+        ch = (self.sep_char_var.get() or "-")[0]
+        if self.sep_auto_var.get():
+            base = f"{'END ' if is_end else ''}FILE: {text}"
+            width = min(max(len(base) + 8, 60), 120)
+        else:
+            width = max(20, int(self.sep_width_var.get()))
+        label = f" {'END ' if is_end else ''}FILE: {text} "
+        line = (ch * width)
+        mid = width // 2
+        start = max(0, mid - len(label)//2)
+        end = start + len(label)
+        return f"{line[:start]}{label}{line[end:]}\n"
+
+    def _write_file_block(self, out_fh: TextIO, file_abs_path: str, root_for_rel: str,
+                          filename_only: bool) -> int:
+        rel = os.path.relpath(file_abs_path, root_for_rel).replace(os.sep, "/")
+        header = os.path.basename(rel) if filename_only else rel
+        out_fh.write(self._separator_line(header, is_end=False))
+        written = 0
+        try:
+            with open(file_abs_path, "r", encoding="utf-8", errors="ignore") as fh:
+                content = fh.read()
+                out_fh.write(content)
+                written = len(content)
+        except Exception as e:
+            msg = f"[ERROR al leer el archivo: {e}]\n"
+            out_fh.write(msg)
+            written = len(msg)
+        if self.sep_end_var.get():
+            out_fh.write("\n")
+            out_fh.write(self._separator_line(header, is_end=True))
+        out_fh.write("\n")
+        return written
+
     def generate_txt(self) -> None:
         project_root = self.project_var.get().strip()
         if not project_root or not os.path.isdir(project_root):
             messagebox.showerror("Error", "Selecciona una ruta de proyecto válida.")
             return
 
-        lib_path = os.path.join(project_root, "lib")
-        if not os.path.isdir(lib_path):
-            messagebox.showerror("Error", "No se encontró la carpeta 'lib' en el proyecto.")
-            return
-
         out_path = self.out_var.get().strip()
         if not out_path:
             base = os.path.basename(os.path.normpath(project_root)) or "proyecto"
-            out_path = os.path.join(os.getcwd(), f"{base}_dart_sources.txt")
-
-        # Sets de selección (para modo contenido)
-        lib_sel = [(p, r) for (p, r, sel) in self._gather_files_with_selected_flag(self.lib_root_item) if sel]
-        lib_selected_set: Set[str] = {os.path.normcase(os.path.abspath(p)) for (p, _) in lib_sel}
-
-        extras_all = self._gather_files_with_selected_flag(self.extras_root)
+            out_path = os.path.join(os.getcwd(), f"{base}_sources.txt")
 
         filename_only = self.filename_only_var.get()
         verbose = self.verbose_var.get()
         excludes = self.parse_excludes()
+        allowed_exts = self.parse_exts()
         mode = self.output_mode_var.get()
         include_all_structure = (mode != "content_selected")
 
@@ -840,38 +958,43 @@ class DartDumpGUI(tk.Tk):
             print("Generando archivo…")
             print(f"Salida: {out_path}")
             print(f"Modo: {mode}")
-            print(f"Archivos lib seleccionados: {len(lib_selected_set)}")
+            print(f"Raíces: {', '.join(self.parse_roots())}")
 
         try:
             with open(out_path, "w", encoding="utf-8") as out_fh:
+                now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                out_fh.write(f"GENERADO: {now}\n")
                 out_fh.write(f"PROYECTO: {project_root}\n")
-                out_fh.write(f"LIB: {lib_path}\n")
+                out_fh.write(f"RAICES: {self.roots_var.get().strip()}\n")
                 out_fh.write("=" * 80 + "\n\n")
 
                 # ============ EXTRAS ============
+                extras_all = self._gather_files_selected_by_root(self.extras_root)
                 if extras_all:
                     out_fh.write("EXTRAS (inicio)\n")
                     out_fh.write("=" * 80 + "\n\n")
                     for abs_path, root_for_rel, is_selected in extras_all:
+                        rel = os.path.relpath(abs_path, root_for_rel).replace(os.sep, "/")
+                        header = os.path.basename(rel) if filename_only else rel
                         if mode == "structure_only":
-                            rel = os.path.relpath(abs_path, root_for_rel).replace(os.sep, "/")
-                            header = os.path.basename(rel) if filename_only else rel
-                            out_fh.write(f"{header}>\n\n\n")
+                            out_fh.write(self._separator_line(header, is_end=False))
+                            if self.sep_end_var.get():
+                                out_fh.write(self._separator_line(header, is_end=True))
+                            out_fh.write("\n")
                         elif mode == "selected_plus_structure":
                             if is_selected:
-                                write_file_block(out_fh, abs_path, root_for_rel, filename_only)
+                                self._write_file_block(out_fh, abs_path, root_for_rel, filename_only)
                             else:
-                                rel = os.path.relpath(abs_path, root_for_rel).replace(os.sep, "/")
-                                header = os.path.basename(rel) if filename_only else rel
-                                out_fh.write(f"{header}>\n\n\n")
+                                out_fh.write(self._separator_line(header, is_end=False))
+                                if self.sep_end_var.get():
+                                    out_fh.write(self._separator_line(header, is_end=True))
+                                out_fh.write("\n")
                         else:  # content_selected
                             if is_selected:
-                                write_file_block(out_fh, abs_path, root_for_rel, filename_only)
+                                self._write_file_block(out_fh, abs_path, root_for_rel, filename_only)
                     out_fh.write("\n")
 
-                # ============ LIB ============
-                allowed_exts = self.parse_exts()
-
+                # ============ POR CADA RAÍZ ============
                 def subtree_has_any_allowed(path: str) -> bool:
                     try:
                         entries = os.listdir(path)
@@ -885,31 +1008,12 @@ class DartDumpGUI(tk.Tk):
                                 return True
                     for d in entries:
                         p = os.path.join(path, d)
-                        if os.path.isdir(p) and d not in excludes:
+                        if os.path.isdir(p) and os.path.basename(p) not in excludes:
                             if subtree_has_any_allowed(p):
                                 return True
                     return False
 
-                def subtree_has_selected(path: str) -> bool:
-                    try:
-                        entries = os.listdir(path)
-                    except PermissionError:
-                        return False
-                    for f in entries:
-                        p = os.path.join(path, f)
-                        if os.path.isfile(p) and os.path.normcase(os.path.abspath(p)) in lib_selected_set:
-                            return True
-                    for d in entries:
-                        p = os.path.join(path, d)
-                        if os.path.isdir(p) and d not in excludes:
-                            if subtree_has_selected(p):
-                                return True
-                    return False
-
-                def should_print_dir(path: str) -> bool:
-                    return subtree_has_any_allowed(path) if include_all_structure else subtree_has_selected(path)
-
-                def write_descend(cur: str, rel_parts: List[str]) -> None:
+                def write_descend(cur: str, root_path: str, sel_set: Set[str]) -> None:
                     try:
                         entries = os.listdir(cur)
                     except PermissionError:
@@ -921,67 +1025,99 @@ class DartDumpGUI(tk.Tk):
                         if ext not in allowed_exts:
                             continue
                         absn = os.path.normcase(os.path.abspath(fpath))
+                        rel = os.path.relpath(fpath, root_path).replace(os.sep, "/")
+                        header = os.path.basename(rel) if filename_only else rel
+
                         if mode == "content_selected":
-                            if absn in lib_selected_set:
-                                write_file_block(out_fh, fpath, lib_path, filename_only)
+                            if absn in sel_set:
+                                self._write_file_block(out_fh, fpath, root_path, filename_only)
                         elif mode == "structure_only":
-                            rel = os.path.relpath(fpath, lib_path).replace(os.sep, "/")
-                            header = os.path.basename(rel) if filename_only else rel
-                            out_fh.write(f"{header}>\n\n\n")
+                            out_fh.write(self._separator_line(header, is_end=False))
+                            if self.sep_end_var.get():
+                                out_fh.write(self._separator_line(header, is_end=True))
+                            out_fh.write("\n")
                         else:  # selected_plus_structure
-                            if absn in lib_selected_set:
-                                write_file_block(out_fh, fpath, lib_path, filename_only)
+                            if absn in sel_set:
+                                self._write_file_block(out_fh, fpath, root_path, filename_only)
                             else:
-                                rel = os.path.relpath(fpath, lib_path).replace(os.sep, "/")
-                                header = os.path.basename(rel) if filename_only else rel
-                                out_fh.write(f"{header}>\n\n\n")
+                                out_fh.write(self._separator_line(header, is_end=False))
+                                if self.sep_end_var.get():
+                                    out_fh.write(self._separator_line(header, is_end=True))
+                                out_fh.write("\n")
 
                     dirs = [e for e in entries if os.path.isdir(os.path.join(cur, e))]
                     for subd in sorted_casefold(dirs):
                         if subd in excludes:
                             continue
                         subpath = os.path.join(cur, subd)
-                        if not should_print_dir(subpath):
-                            continue
-                        out_fh.write(dir_header(len(rel_parts) + 1, subd))
-                        out_fh.write("\n")
-                        write_descend(subpath, rel_parts + [subd])
-
-                # Top-level files
-                top_entries = os.listdir(lib_path)
-                top_files = [e for e in top_entries if os.path.isfile(os.path.join(lib_path, e))]
-                for f in sorted_casefold(top_files):
-                    fpath = os.path.join(lib_path, f)
-                    ext = f.rsplit(".", 1)[-1].lower() if "." in f else ""
-                    if ext not in allowed_exts:
-                        continue
-                    absn = os.path.normcase(os.path.abspath(fpath))
-                    if mode == "content_selected":
-                        if absn in lib_selected_set:
-                            write_file_block(out_fh, fpath, lib_path, filename_only)
-                    elif mode == "structure_only":
-                        rel = os.path.relpath(fpath, lib_path).replace(os.sep, "/")
-                        header = os.path.basename(rel) if filename_only else rel
-                        out_fh.write(f"{header}>\n\n\n")
-                    else:
-                        if absn in lib_selected_set:
-                            write_file_block(out_fh, fpath, lib_path, filename_only)
+                        if include_all_structure:
+                            if not subtree_has_any_allowed(subpath):
+                                continue
                         else:
-                            rel = os.path.relpath(fpath, lib_path).replace(os.sep, "/")
-                            header = os.path.basename(rel) if filename_only else rel
-                            out_fh.write(f"{header}>\n\n\n")
+                            # si sólo contenido, imprime directorios solo si hay seleccionados dentro
+                            if not any(os.path.normcase(os.path.abspath(os.path.join(dp, fn))) in sel_set
+                                       for dp, _, fns in os.walk(subpath) for fn in fns):
+                                continue
+                        out_fh.write(dir_header(1, subd))
+                        out_fh.write("\n")
+                        write_descend(subpath, root_path, sel_set)
 
-                # Subcarpetas con encabezados según modo
-                top_dirs = [e for e in top_entries if os.path.isdir(os.path.join(lib_path, e))]
-                for d in sorted_casefold(top_dirs):
-                    if d in excludes:
+                for root_name, root_item in self._gather_all_src_roots():
+                    root_path = os.path.join(project_root, root_name)
+                    if not os.path.isdir(root_path):
                         continue
-                    dpath = os.path.join(lib_path, d)
-                    if not should_print_dir(dpath):
-                        continue
-                    out_fh.write(dir_header(1, d))
-                    out_fh.write("\n")
-                    write_descend(dpath, [d])
+                    # Set seleccionados para esta raíz
+                    sel_list = [(p, r) for (p, r, sel) in self._gather_files_selected_by_root(root_item) if sel]
+                    sel_set: Set[str] = {os.path.normcase(os.path.abspath(p)) for (p, _) in sel_list}
+
+                    out_fh.write(f"=== RAIZ: {root_name} ===\n\n")
+
+                    # top-level files
+                    top_entries = os.listdir(root_path)
+                    top_files = [e for e in top_entries if os.path.isfile(os.path.join(root_path, e))]
+                    for f in sorted_casefold(top_files):
+                        fpath = os.path.join(root_path, f)
+                        ext = f.rsplit(".", 1)[-1].lower() if "." in f else ""
+                        if ext not in allowed_exts:
+                            continue
+                        absn = os.path.normcase(os.path.abspath(fpath))
+                        rel = os.path.relpath(fpath, root_path).replace(os.sep, "/")
+                        header = os.path.basename(rel) if filename_only else rel
+
+                        if mode == "content_selected":
+                            if absn in sel_set:
+                                self._write_file_block(out_fh, fpath, root_path, filename_only)
+                        elif mode == "structure_only":
+                            out_fh.write(self._separator_line(header, is_end=False))
+                            if self.sep_end_var.get():
+                                out_fh.write(self._separator_line(header, is_end=True))
+                            out_fh.write("\n")
+                        else:
+                            if absn in sel_set:
+                                self._write_file_block(out_fh, fpath, root_path, filename_only)
+                            else:
+                                out_fh.write(self._separator_line(header, is_end=False))
+                                if self.sep_end_var.get():
+                                    out_fh.write(self._separator_line(header, is_end=True))
+                                out_fh.write("\n")
+
+                    # subcarpetas con encabezados
+                    top_dirs = [e for e in top_entries if os.path.isdir(os.path.join(root_path, e))]
+                    for d in sorted_casefold(top_dirs):
+                        if d in excludes:
+                            continue
+                        dpath = os.path.join(root_path, d)
+                        if include_all_structure:
+                            if not subtree_has_any_allowed(dpath):
+                                continue
+                        else:
+                            # imprime dir solo si hay seleccionados adentro
+                            if not any(os.path.normcase(os.path.abspath(os.path.join(dp, fn))) in sel_set
+                                       for dp, _, fns in os.walk(dpath) for fn in fns):
+                                continue
+                        out_fh.write(dir_header(1, d))
+                        out_fh.write("\n")
+                        write_descend(dpath, root_path, sel_set)
 
             if verbose:
                 print("✅ TXT generado correctamente.")
@@ -995,13 +1131,16 @@ class DartDumpGUI(tk.Tk):
     # ------------------- Perfiles -------------------
 
     def build_profile_payload(self) -> Dict[str, Any]:
-        """Empaqueta opciones + selección actual."""
+        """Empaqueta opciones + selección actual (todas las raíces + extras)."""
         proj = os.path.abspath(self.project_var.get().strip())
 
+        # Recoger seleccionados por cada raíz
         lib_selected_rel: List[str] = []
-        for abs_path, _ in [(p, r) for (p, r, sel) in self._gather_files_with_selected_flag(self.lib_root_item) if sel]:
-            lib_selected_rel.append(os.path.relpath(abs_path, proj).replace(os.sep, "/"))
+        for _, root_item in self._gather_all_src_roots():  # _ evita warning "unused variable"
+            for abs_path, _ in [(p, r) for (p, r, sel) in self._gather_files_selected_by_root(root_item) if sel]:
+                lib_selected_rel.append(os.path.relpath(abs_path, proj).replace(os.sep, "/"))
 
+        # Extras agrupados
         extras_by_group: Dict[str, List[str]] = {}
         def walk(it: str, current_group: Optional[str]) -> None:
             meta = self.item_meta[it]
@@ -1010,7 +1149,7 @@ class DartDumpGUI(tk.Tk):
                 base_group = meta.label.strip()
                 if base_group.startswith("[") and base_group.endswith("]"):
                     base_group = base_group[1:-1]
-            if meta.kind == "file" and self.item_state[it] == 1 and meta.group != "lib":
+            if meta.kind == "file" and self.item_state[it] == 1 and meta.group == "extras":
                 rel = os.path.relpath(meta.path, proj).replace(os.sep, "/")
                 extras_by_group.setdefault(base_group or "Extras", []).append(rel)
             for ch in self.tree.get_children(it):
@@ -1021,12 +1160,18 @@ class DartDumpGUI(tk.Tk):
         return {
             "project_root": proj,
             "options": {
+                "source_roots": self.roots_var.get().strip(),
                 "extensions": self.ext_var.get().strip(),
                 "excludes": self.exclude_var.get().strip(),
                 "filename_only": self.filename_only_var.get(),
                 "verbose": self.verbose_var.get(),
+                "output_mode": self.output_mode_var.get(),
+                "sep_char": (self.sep_char_var.get() or "-")[0],
+                "sep_width": int(self.sep_width_var.get()),
+                "sep_auto": self.sep_auto_var.get(),
+                "sep_print_end": self.sep_end_var.get(),
             },
-            "lib_selected": lib_selected_rel,
+            "selected_files_rel": sorted(set(lib_selected_rel), key=str.casefold),
             "extras_groups": [{"label": lbl, "files": files} for lbl, files in extras_by_group.items()],
         }
 
@@ -1035,12 +1180,18 @@ class DartDumpGUI(tk.Tk):
         proj = str(payload.get("project_root") or self.project_var.get())
         self.project_var.set(proj)
         opts: Dict[str, Any] = dict(payload.get("options", {}))
+        self.roots_var.set(str(opts.get("source_roots", self.roots_var.get())))
         self.ext_var.set(str(opts.get("extensions", self.ext_var.get())))
         self.exclude_var.set(str(opts.get("excludes", self.exclude_var.get())))
-        self.filename_only_var.set(bool(opts.get("filename_only", False)))
-        self.verbose_var.set(bool(opts.get("verbose", True)))
+        self.filename_only_var.set(bool(opts.get("filename_only", self.filename_only_var.get())))
+        self.verbose_var.set(bool(opts.get("verbose", self.verbose_var.get())))
+        self.output_mode_var.set(str(opts.get("output_mode", self.output_mode_var.get())))
+        self.sep_char_var.set(str(opts.get("sep_char", self.sep_char_var.get()))[:1] or "-")
+        self.sep_width_var.set(int(opts.get("sep_width", self.sep_width_var.get())))
+        self.sep_auto_var.set(bool(opts.get("sep_auto", self.sep_auto_var.get())))
+        self.sep_end_var.set(bool(opts.get("sep_print_end", self.sep_end_var.get())))
 
-        # escanear
+        # escanear con nuevas raíces
         self.scan_project()
 
         # reconstruir EXTRAS desde perfil
@@ -1077,19 +1228,23 @@ class DartDumpGUI(tk.Tk):
 
         self.recompute_parent_states(self.extras_root)
 
-        # deseleccionar todo en lib
-        for it in self.tree.get_children(self.lib_root_item):
-            self.set_state_recursive(it, False)
+        # deseleccionar todo en raíces
+        for root_item in self.src_roots_nodes.values():
+            for it in self.tree.get_children(root_item):
+                self.set_state_recursive(it, False)
 
+        # seleccionar según perfil
         proj_abs = os.path.abspath(proj)
-        for rel in list(payload.get("lib_selected", [])):
+        for rel in list(payload.get("selected_files_rel", [])):
             rel = str(rel)
             absn = os.path.normcase(os.path.abspath(os.path.join(proj_abs, rel)))
-            node = self.lib_file_nodes.get(absn)
-            if node:
-                self.item_state[node] = 1
-                self.set_item_text(node, self.item_meta[node].label, 1)
-                self.recompute_parent_states(node)
+            # Busca en todas las raíces
+            for group_map in self.src_root_files_nodes.values():
+                node = group_map.get(absn)
+                if node:
+                    self.item_state[node] = 1
+                    self.set_item_text(node, self.item_meta[node].label, 1)
+                    self.recompute_parent_states(node)
 
     # ---- Acciones de perfiles (UI) ----
 
@@ -1153,21 +1308,18 @@ class DartDumpGUI(tk.Tk):
         messagebox.showinfo("Perfiles", f"Perfiles activados: {', '.join(sel)}")
 
     def _build_union_payload(self, payloads: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Une varias selecciones en una sola (lib ∪ extras). Mantiene opciones del primero."""
+        """Une varias selecciones en una sola (∪). Mantiene opciones del primero."""
         if not payloads:
             return self.build_profile_payload()
         first = payloads[0]
         proj = first.get("project_root", self.project_var.get())
-        extensions = str(first.get("options", {}).get("extensions", self.ext_var.get()))
-        excludes = str(first.get("options", {}).get("excludes", self.exclude_var.get()))
-        filename_only = bool(first.get("options", {}).get("filename_only", self.filename_only_var.get()))
-        verbose = bool(first.get("options", {}).get("verbose", self.verbose_var.get()))
+        options = dict(first.get("options", {}))
 
-        lib_set: Set[str] = set()
+        sel_set: Set[str] = set()
         extras_map: Dict[str, Set[str]] = {}
         for p in payloads:
-            for rel in p.get("lib_selected", []):
-                lib_set.add(str(rel))
+            for rel in p.get("selected_files_rel", []):
+                sel_set.add(str(rel))
             for g in p.get("extras_groups", []):
                 label = str(g.get("label") or "Extras")
                 files = {str(r) for r in g.get("files", [])}
@@ -1175,19 +1327,13 @@ class DartDumpGUI(tk.Tk):
 
         return {
             "project_root": proj,
-            "options": {
-                "extensions": extensions,
-                "excludes": excludes,
-                "filename_only": filename_only,
-                "verbose": verbose,
-            },
-            "lib_selected": sorted(lib_set, key=str.casefold),
+            "options": options,
+            "selected_files_rel": sorted(sel_set, key=str.casefold),
             "extras_groups": [{"label": lbl, "files": sorted(list(files), key=str.casefold)}
                               for lbl, files in extras_map.items()],
         }
 
     def _list_dialog(self, title: str, items: List[str], multi: bool) -> Optional[List[str]]:
-        """Diálogo con Listbox (sin escribir nombres). Soporta selección múltiple."""
         dlg = tk.Toplevel(self)
         dlg.title(title)
         dlg.geometry("360x420")
@@ -1205,7 +1351,6 @@ class DartDumpGUI(tk.Tk):
         sel: List[str] = []
 
         def accept() -> None:
-            # Pylance: curselection() retorna tipo desconocido en stubs -> casteamos
             indices_any: Any = cast(Any, lb).curselection()
             sel_idx: Tuple[int, ...] = tuple(int(x) for x in indices_any)
             chosen: List[str] = [items[i] for i in sel_idx]
@@ -1221,13 +1366,48 @@ class DartDumpGUI(tk.Tk):
         ttk.Button(btns, text="Cancelar", command=cancel).pack(side="right", padx=4)
         ttk.Button(btns, text="Aceptar", command=accept).pack(side="right", padx=4)
 
-        # Accesos rápidos
         dlg.bind("<Return>", lambda e: accept())
         dlg.bind("<Escape>", lambda e: cancel())
 
         dlg.wait_window(dlg)
         return sel or None
 
+    # ------------------- Preferencias -------------------
+
+    def save_prefs(self) -> None:
+        prefs: Prefs = {
+            "project_root": self.project_var.get().strip(),
+            "source_roots": self.roots_var.get().strip(),
+            "extensions": self.ext_var.get().strip(),
+            "excludes": self.exclude_var.get().strip(),
+            "filename_only": self.filename_only_var.get(),
+            "verbose": self.verbose_var.get(),
+            "output_mode": self.output_mode_var.get(),
+            "sep_char": (self.sep_char_var.get() or "-")[0],
+            "sep_width": int(self.sep_width_var.get()),
+            "sep_auto": self.sep_auto_var.get(),
+            "sep_print_end": self.sep_end_var.get(),
+        }
+        _save_prefs(prefs)
+        messagebox.showinfo("Preferencias", "Preferencias guardadas.")
+
+    def restore_prefs(self) -> None:
+        prefs: Prefs = _load_prefs()
+        if not prefs:
+            messagebox.showinfo("Preferencias", "No hay preferencias guardadas.")
+            return
+        self.project_var.set(prefs.get("project_root", self.project_var.get()))
+        self.roots_var.set(prefs.get("source_roots", self.roots_var.get()))
+        self.ext_var.set(prefs.get("extensions", self.ext_var.get()))
+        self.exclude_var.set(prefs.get("excludes", self.exclude_var.get()))
+        self.filename_only_var.set(bool(prefs.get("filename_only", self.filename_only_var.get())))
+        self.verbose_var.set(bool(prefs.get("verbose", self.verbose_var.get())))
+        self.output_mode_var.set(prefs.get("output_mode", self.output_mode_var.get()))
+        self.sep_char_var.set(str(prefs.get("sep_char", self.sep_char_var.get()))[:1] or "-")
+        self.sep_width_var.set(int(prefs.get("sep_width", self.sep_width_var.get())))
+        self.sep_auto_var.set(bool(prefs.get("sep_auto", self.sep_auto_var.get())))
+        self.sep_end_var.set(bool(prefs.get("sep_print_end", self.sep_end_var.get())))
+        messagebox.showinfo("Preferencias", "Preferencias restauradas.")
 
 # ---------- main ----------
 

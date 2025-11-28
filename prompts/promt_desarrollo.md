@@ -2,7 +2,7 @@ Objetivo.
 No optimices por la solución más rápida; prioriza la más completa y correctamente separada por capas. No metas lo que va en BLoCs dentro de una Page.
 
 Alcance.
-Comprueba dentro del feature catalog si puedes aprovechar el resto de darts que se tenían, cuáles ya no son requeridos en su totalidad o cómo aprovecharlos; si no sirven, indícame si debo borrarlos.
+Comprueba dentro del codigo relevante, solo para la Feature que se este trabajando, si puedes aprovechar el resto de darts que se tenían, cuáles ya no son requeridos en su totalidad o cómo aprovecharlos; si no sirven, indícame si debo borrarlos.
 
 Revisión por capas (Clean Architecture).
 Revisa todo lo que hay en:
