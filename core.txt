@@ -1,0 +1,4663 @@
+GENERADO: 2025-11-28 12:20:40
+PROYECTO: C:/Users/marqu/Programacion/App100MujeresTrabajando/flutter_application_emprendedoras
+RAICES: lib
+================================================================================
+
+EXTRAS (inicio)
+================================================================================
+
+------------------------------ FILE: pubspec.yaml ------------------------------
+name: flutter_application_emprendedoras
+description: "A new Flutter project."
+# The following line prevents the package from being accidentally published to
+# pub.dev using `flutter pub publish`. This is preferred for private packages.
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+# The following defines the version and build number for your application.
+# A version number is three numbers separated by dots, like 1.2.43
+# followed by an optional build number separated by a +.
+# Both the version and the builder number may be overridden in flutter
+# build by specifying --build-name and --build-number, respectively.
+# In Android, build-name is used as versionName while build-number used as versionCode.
+# Read more about Android versioning at https://developer.android.com/studio/publish/versioning
+# In iOS, build-name is used as CFBundleShortVersionString while build-number is used as CFBundleVersion.
+# Read more about iOS versioning at
+# https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
+# In Windows, build-name is used as the major, minor, and patch parts
+# of the product and file versions while build-number is used as the build suffix.
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.7.0
+
+# Dependencies specify other packages that your package needs in order to work.
+# To automatically upgrade your package dependencies to the latest versions
+# consider running `flutter pub upgrade --major-versions`. Alternatively,
+# dependencies can be manually updated by changing the version numbers below to
+# the latest version available on pub.dev. To see which dependencies have newer
+# versions available, run `flutter pub outdated`.
+dependencies:
+  flutter:
+    sdk: flutter
+  animated_list_plus: ^0.5.2
+
+  flutter_localizations:
+    sdk: flutter
+
+  # The following adds the Cupertino Icons font to your application.
+  # Use with the CupertinoIcons class for iOS style icons.
+  cupertino_icons: ^1.0.8
+
+  #State management
+  flutter_bloc: ^9.1.1
+  
+  #Firebase
+  firebase_core: ^4.1.0
+  firebase_auth: ^6.0.2
+  cloud_firestore: ^6.0.1
+  firebase_storage: ^13.0.2
+
+  #Callable Functions (cliente)
+  cloud_functions: ^6.0.1
+
+  #App Check (protege las callables)
+  firebase_app_check: ^0.4.1
+  
+  ec_validations: ^0.0.14
+  email_validator: ^3.0.0
+  connectivity_plus: ^7.0.0
+
+  path: ^1.9.0
+
+  http: ^1.2.2
+  http_parser: ^4.0.2
+  cached_network_image: ^3.4.1
+
+  file_picker: ^10.3.2
+
+  #Image Picker
+  image_picker: ^1.2.0   # oficial (Flutter team)
+  crop_your_image: ^2.0.0 # usa la más reciente estable
+  image: ^4.5.4           # procesamiento/compress en Dart puro
+  mime: ^2.0.0      # para determinar el mimeType de un archivo  : sniff MIME por extensión o magic bytes
+  
+  shared_preferences: ^2.3.2
+  intl: ^0.20.2
+  
+
+
+
+  
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  # The "flutter_lints" package below contains a set of recommended lints to
+  # encourage good coding practices. The lint set provided by the package is
+  # activated in the `analysis_options.yaml` file located at the root of your
+  # package. See that file for information about deactivating specific lint
+  # rules and activating additional ones.
+  flutter_lints: ^6.0.0
+
+# For information on the generic Dart part of this file, see the
+# following page: https://dart.dev/tools/pub/pubspec
+
+# The following section is specific to Flutter packages.
+flutter:
+
+  # The following line ensures that the Material Icons font is
+  # included with your application, so that you can use the icons in
+  # the material Icons class.
+  uses-material-design: true
+
+  # To add assets to your application, add an assets section, like this:
+  assets:
+    - assets/Logo1_FondoTransparente-Azul.png
+    - assets/Logo2_FondoTransparente-Blanco.png
+
+  # An image asset can refer to one or more resolution-specific "variants", see
+  # https://flutter.dev/to/resolution-aware-images
+
+  # For details regarding adding assets from package dependencies, see
+  # https://flutter.dev/to/asset-from-package
+
+  # To add custom fonts to your application, add a fonts section here,
+  # in this "flutter" section. Each entry in this list should have a
+  # "family" key with the font family name, and a "fonts" key with a
+  # list giving the asset and other descriptors for the font. For
+  # example:
+  # fonts:
+  #   - family: Schyler
+  #     fonts:
+  #       - asset: fonts/Schyler-Regular.ttf
+  #       - asset: fonts/Schyler-Italic.ttf
+  #         style: italic
+  #   - family: Trajan Pro
+  #     fonts:
+  #       - asset: fonts/TrajanPro.ttf
+  #       - asset: fonts/TrajanPro_Bold.ttf
+  #         weight: 700
+  #
+  # For details regarding fonts from package dependencies,
+  # see https://flutter.dev/to/font-from-package
+
+---------------------------- END FILE: pubspec.yaml ----------------------------
+
+
+=== RAIZ: lib ===
+
+-------------------------------- FILE: main.dart -------------------------------
+import 'dart:io' as io;
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb, debugPrint;
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
+
+import 'firebase_options.dart';
+import 'modules/app/app.dart';
+import 'modules/core/blocs/net_signal_cubit.dart';
+import 'modules/core/blocs/settings_cubit.dart';
+import 'modules/core/config/app_routes.dart';
+import 'modules/core/config/feature_flags.dart' as ff;
+import 'modules/core/net/net_service.dart';
+import 'modules/core/services/storage/verification_grace_storage.dart';
+import 'modules/core/services/storage/session_storage.dart';
+
+// Auth DI…
+import 'modules/features/auth/data/datasources/remote_auth_datasource.dart';
+import 'modules/features/auth/data/repositories/auth_repository_impl.dart';
+import 'modules/features/auth/domain/usecases/login_user.dart';
+import 'modules/features/auth/domain/usecases/register_user.dart';
+import 'modules/features/auth/presentation/blocs/login_bloc.dart';
+import 'modules/features/auth/presentation/blocs/register_bloc.dart';
+import 'modules/features/auth/presentation/blocs/welcome_cubit.dart';
+
+// Home DI…
+import 'modules/features/home/data/datasources/home_remote_datasource.dart';
+import 'modules/features/home/data/repositories/home_repository_impl.dart';
+import 'modules/features/home/domain/usecases/get_home_items.dart';
+import 'modules/features/home/presentation/blocs/home_cubit.dart';
+
+// Profile READ DI…
+import 'modules/features/profile/data/datasources/profile_read_remote_datasource.dart';
+import 'modules/features/profile/data/repositories/profile_read_repository_impl.dart';
+import 'modules/features/profile/domain/usecases/watch_user_stream.dart';
+import 'modules/features/profile/presentation/blocs/profile_overview_cubit.dart';
+
+// Cart DI…
+import 'modules/features/cart/data/repositories/in_memory_cart_repository.dart';
+import 'modules/features/cart/domain/repositories/cart_repository.dart';
+import 'modules/features/cart/presentation/blocs/cart_cubit.dart';
+
+Future<void> _initFirebaseAndAppCheck() async {
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  final opts = Firebase.app().options;
+  debugPrint('FirebaseApp -> projectId=${opts.projectId} appId=${opts.appId}');
+
+  try {
+    if (kIsWeb) {
+      await FirebaseAppCheck.instance.activate(
+        providerWeb: ReCaptchaV3Provider(
+          '6LcGk9IrAAAAAAU8vv362VsYSqKKPUGeq5PHlpa1',
+        ),
+      );
+    } else if (io.Platform.isAndroid) {
+      await FirebaseAppCheck.instance.activate(
+        androidProvider:
+            kDebugMode ? AndroidProvider.debug : AndroidProvider.playIntegrity,
+      );
+    } else if (io.Platform.isIOS || io.Platform.isMacOS) {
+      await FirebaseAppCheck.instance.activate(
+        appleProvider:
+            kDebugMode ? AppleProvider.debug : AppleProvider.deviceCheck,
+      );
+    }
+
+    if (kDebugMode && ff.FeatureFlags.appCheckPrintDebugSecretOnBoot) {
+      try {
+        final t = await FirebaseAppCheck.instance.getToken(true);
+        debugPrint('AppCheck debug getToken(): ${t?.substring(0, 10)}...');
+      } catch (e) {
+        debugPrint('AppCheck getToken(true) failed: $e');
+      }
+    }
+  } catch (e) {
+    if (kDebugMode) debugPrint('FirebaseAppCheck.activate failed: $e');
+  }
+}
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await _initFirebaseAndAppCheck();
+  Intl.defaultLocale = 'es_EC';
+  await initializeDateFormatting('es_EC');
+
+  final sharedPrefs = await SharedPreferences.getInstance();
+  final verificationGraceStorage = VerificationGraceStorage(sharedPrefs);
+  AppRoutes.configureGraceStorage(verificationGraceStorage);
+  final sessionStorage = SessionStorage(sharedPrefs);
+  AppRoutes.configureSessionStorage(sessionStorage);
+
+  final firebaseAuth = FirebaseAuth.instance;
+  final firebaseFirestore = FirebaseFirestore.instance;
+
+  // Auth DI
+  final remoteAuthDataSource = RemoteAuthDataSource(
+    firebaseAuth,
+    firebaseFirestore,
+  );
+  final authRepository = AuthRepositoryImpl(remoteAuthDataSource);
+  final registerUser = RegisterUser(authRepository);
+  final loginUser = LoginUser(authRepository);
+
+  // Home DI
+  final homeRemote = HomeRemoteDataSource();
+  final homeRepo = HomeRepositoryImpl(homeRemote);
+  final getHomeItems = GetHomeItems(homeRepo);
+
+  // Profile READ DI
+  final profileReadDs = ProfileRemoteDataSource(firebaseFirestore);
+  final profileReadRepo = ProfileRepositoryImpl(profileReadDs);
+  final watchUser = WatchUserProfile(profileReadRepo);
+
+  final netService = NetService(connectivity: Connectivity());
+
+  // Cart repo simple en memoria (para desarrollo)
+  final CartRepository cartRepo = InMemoryCartRepository();
+
+  runApp(
+    MultiRepositoryProvider(
+      providers: [
+        RepositoryProvider<VerificationGraceStorage>.value(
+          value: verificationGraceStorage,
+        ),
+        RepositoryProvider<SessionStorage>.value(
+          value: sessionStorage,
+        ),
+      ],
+      child: MultiBlocProvider(
+        providers: [
+          // Core
+          BlocProvider(create: (_) => NetSignalCubit(netService.hasInternet$)),
+          BlocProvider(create: (_) => SettingsCubit()),
+          BlocProvider(create: (_) => WelcomeCubit()),
+          // Auth
+          BlocProvider(create: (_) => RegisterBloc(registerUser: registerUser)),
+          BlocProvider(create: (_) => LoginBloc(loginUser: loginUser)),
+          // Home
+          BlocProvider(create: (_) => HomeCubit(getHomeItems)),
+          // Profile (READ)
+        BlocProvider(
+          create: (context) {
+            final cubit = ProfileCubit(
+              watchUser,
+              sessionStorage: context.read<SessionStorage>(),
+            );
+            cubit.watch(FirebaseAuth.instance.currentUser?.uid);
+            FirebaseAuth.instance.userChanges().listen((u) {
+              if (!cubit.isClosed) cubit.watch(u?.uid);
+            });
+            return cubit;
+            },
+          ),
+          // Cart
+          BlocProvider(create: (_) => CartCubit(cartRepo)),
+        ],
+        child: const App(),
+      ),
+    ),
+  );
+}
+
+------------------------------ END FILE: main.dart -----------------------------
+
+Dentro de /modules:
+
+Dentro de /app:
+
+-------------------------- FILE: modules/app/app.dart --------------------------
+// lib/modules/app/app.dart
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+
+import '../core/blocs/settings_cubit.dart';
+import '../core/config/app_theme.dart';
+import '../core/config/app_routes.dart';
+import '../core/config/feature_flags.dart' as ff;
+import '../core/widgets/appcheck_status_badge.dart';
+import '../core/widgets/network/connectivity_hud.dart';
+import '../core/widgets/layout/ime_boot_guard.dart';
+import '../core/widgets/layout/tap_outside_unfocus.dart';
+import '../core/widgets/network/connectivity_banner.dart'; // empuja contenido
+
+class App extends StatelessWidget {
+  const App({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final initialRoute = AppRoutes.initialRouteFor(
+      FirebaseAuth.instance.currentUser,
+    );
+
+    return BlocBuilder<SettingsCubit, SettingsState>(
+      builder: (context, settings) {
+        return MaterialApp(
+          title: '100 Mujeres Trabajando',
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: () {
+            switch (settings.themeMode) {
+              case AppThemeMode.light:
+                return ThemeMode.light;
+              case AppThemeMode.dark:
+                return ThemeMode.dark;
+              case AppThemeMode.system:
+                return ThemeMode.system;
+            }
+          }(),
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [
+            Locale('es', 'EC'),
+            Locale('es'),
+            Locale('en'),
+          ],
+          initialRoute: initialRoute,
+          onGenerateRoute: AppRoutes.generateRoute,
+          builder: (context, child) {
+            final scaledChild = MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                textScaler: TextScaler.linear(
+                  settings.textScaleFactor.clamp(0.8, 1.2),
+                ),
+              ),
+              child: child!,
+            );
+
+            final content = ImeBootGuard(
+              child: TapOutsideUnfocus(dismissOnPan: false, child: scaledChild),
+            );
+
+            return Stack(
+              children: [
+                Column(
+                  children: [
+                    const ConnectivityBanner(),
+                    Expanded(child: content),
+                  ],
+                ),
+                const ConnectivityHUD(),
+                // Badge solo en debug (si lo quieres, descomenta estas 2 líneas y vuelve a importar)
+                (() {
+                  // Cambia aquí a true/false para activar/desactivar el badge
+                  const showAppCheckBadge = false;
+                  // ignore: dead_code
+                  if (showAppCheckBadge && !kReleaseMode && ff.FeatureFlags.appCheckBadgeEnabled) {
+                    return const AppCheckStatusBadge();}
+                  return const SizedBox.shrink();
+                })(),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+------------------------ END FILE: modules/app/app.dart ------------------------
+
+Dentro de /core:
+
+Dentro de /blocs:
+
+---------------- FILE: modules/core/blocs/net_signal_cubit.dart ----------------
+// lib/modules/core/blocs/net_signal_cubit.dart
+import 'dart:async';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+enum NetStatus { online, unstable, offline }
+
+// Recibe un Stream<bool> (hayInternet) y aplica histeresis + detección de intermitencia.
+class NetSignalCubit extends Cubit<NetStatus> {
+  final Stream<bool> rawHasInternet; // true = hay Internet real
+  StreamSubscription<bool>? _sub;
+
+  Timer? _toOffline, _toOnline, _unstableTimer;
+  int _flaps = 0;
+  DateTime _windowStart = DateTime.now();
+  bool _lastRaw = true;
+
+  NetSignalCubit(this.rawHasInternet) : super(NetStatus.online) {
+    _sub = rawHasInternet.listen(_onRaw);
+  }
+
+  bool get isOnline => state == NetStatus.online;
+
+  void _onRaw(bool has) {
+    if (has == _lastRaw) return;
+    _lastRaw = has;
+
+    // Contabilizamos flaps en ventana de 20s
+    final now = DateTime.now();
+    if (now.difference(_windowStart) > const Duration(seconds: 20)) {
+      _windowStart = now; _flaps = 0;
+    }
+    _flaps++;
+
+    // Si hay 3 flaps en ventana, pasamos a inestable (si no lo estamos ya)
+    if (_flaps >= 2 && state != NetStatus.offline) {
+      emit(NetStatus.unstable);
+      _unstableTimer?.cancel();
+      _unstableTimer = Timer(const Duration(seconds: 5), () {
+        if (state == NetStatus.unstable && _lastRaw) emit(NetStatus.online);
+      });
+    }
+
+    // Histeresis: entrada a offline rápida; salida a online más lenta
+    if (!has) {
+      _toOnline?.cancel();
+      _toOffline?.cancel();
+      _toOffline = Timer(const Duration(milliseconds: 700), () {
+        emit(NetStatus.offline);
+      });
+    } else {
+      _toOffline?.cancel();
+      _toOnline?.cancel();
+      _toOnline = Timer(const Duration(seconds: 2), () {
+        emit(NetStatus.online);
+        _flaps = 0;
+        // emit(_flaps >= 2 ? NetStatus.unstable : NetStatus.online);
+      });
+    }
+  }
+
+  Future<void> forceRefresh() async {
+    // Tip: si tu NetService expone un método público para forzar probe, llama aquí.
+    // No es obligatorio: el timer periódico/stream ya actualiza.
+  }
+
+  @override
+  Future<void> close() {
+    _sub?.cancel();
+    _toOffline?.cancel();
+    _toOnline?.cancel();
+    _unstableTimer?.cancel();
+    return super.close();
+  }
+}
+
+-------------- END FILE: modules/core/blocs/net_signal_cubit.dart --------------
+
+----------------- FILE: modules/core/blocs/settings_cubit.dart -----------------
+// modules/core/blocs/settings_cubit.dart
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+enum AppThemeMode { system, light, dark }
+
+class SettingsState {
+  final double textScaleFactor;
+  final AppThemeMode themeMode;
+
+  SettingsState({
+    required this.textScaleFactor,
+    required this.themeMode,
+  });
+
+  SettingsState copyWith({
+    double? textScaleFactor,
+    AppThemeMode? themeMode,
+  }) {
+    return SettingsState(
+      textScaleFactor: textScaleFactor ?? this.textScaleFactor,
+      themeMode: themeMode ?? this.themeMode,
+    );
+  }
+}
+
+class SettingsCubit extends Cubit<SettingsState> {
+  SettingsCubit()
+      : super(SettingsState(textScaleFactor: 1.0, themeMode: AppThemeMode.system));
+
+  void setScaleFactor(double factor) {
+    emit(state.copyWith(textScaleFactor: factor.clamp(0.8, 1.5)));
+  }
+
+  void setThemeMode(AppThemeMode mode) {
+    emit(state.copyWith(themeMode: mode));
+  }
+}
+
+--------------- END FILE: modules/core/blocs/settings_cubit.dart ---------------
+
+Dentro de /config:
+
+------------------- FILE: modules/core/config/app_routes.dart ------------------
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+
+import '../../features/admin/admin_routes.dart';
+import '../../features/auth/auth_routes.dart';
+import '../../features/auth/domain/role_utils.dart';
+import '../utils/validation/validators.dart';
+import '../../features/cart/cart_routes.dart';
+import '../../features/catalog/catalog_routes.dart';
+import '../../features/home/home_routes.dart';
+import '../../features/orders/orders_routes.dart';
+import '../../features/profile/profile_routes.dart';
+import '../services/storage/verification_grace_storage.dart';
+import '../services/storage/session_storage.dart';
+import '../config/feature_flags.dart';
+
+class AppRoutes {
+  static const String welcome = AuthRoutes.welcome;
+  static const String roleSelection = AuthRoutes.roleSelection;
+  static const String register = AuthRoutes.register;
+  static const String accessRequest = AuthRoutes.accessRequest;
+  static const String login = AuthRoutes.login;
+  static const String emailVerification = AuthRoutes.emailVerification;
+  static const String home = HomeRoutes.home;
+  static const String admin = AdminRoutes.base;
+
+  static VerificationGraceStorage? _graceStorage;
+  static SessionStorage? _sessionStorage;
+
+  static void configureGraceStorage(VerificationGraceStorage storage) {
+    _graceStorage = storage;
+  }
+
+  static void configureSessionStorage(SessionStorage storage) {
+    _sessionStorage = storage;
+  }
+
+  static VerificationGraceStorage? get graceStorage => _graceStorage;
+
+  static String initialRouteFor(User? user) {
+    if (user == null) return welcome;
+    if (_shouldForceEmailVerification(user)) return emailVerification;
+    final storedRole = _sessionStorage?.getRole(user.uid);
+    if (storedRole != null && isAdminRole(storedRole)) return admin;
+    return home;
+  }
+
+  static Route<dynamic> generateRoute(RouteSettings settings) {
+    final name = settings.name ?? '';
+    final user = FirebaseAuth.instance.currentUser;
+    final shouldForceVerification =
+        _shouldForceEmailVerification(user) && !name.startsWith('/auth');
+
+    if (shouldForceVerification) {
+      return AuthRoutes.onGenerateRoute(
+        const RouteSettings(name: AuthRoutes.emailVerification),
+      );
+    }
+
+    if (name.startsWith('/auth')) {
+      return AuthRoutes.onGenerateRoute(settings);
+    }
+    if (name.startsWith('/home')) {
+      return HomeRoutes.onGenerateRoute(settings);
+    }
+    if (name.startsWith('/profile')) {
+      return ProfileRoutes.onGenerateRoute(settings);
+    }
+    if (name.startsWith(CatalogRoutes.base)) {
+      return CatalogRoutes.onGenerateRoute(settings);
+    }
+    if (name.startsWith(OrdersRoutes.base)) {
+      return OrdersRoutes.onGenerateRoute(settings);
+    }
+    if (name.startsWith(CartRoutes.base)) {
+      return CartRoutes.onGenerateRoute(settings);
+    }
+    if (name == AdminRoutes.base || name.startsWith('${AdminRoutes.base}/')) {
+      return AdminRoutes.onGenerateRoute(settings);
+    }
+
+
+    final fallbackRouteName = initialRouteFor(user);
+    return fallbackRouteName == home
+        ? HomeRoutes.onGenerateRoute(const RouteSettings(name: HomeRoutes.home))
+        : AuthRoutes.onGenerateRoute(RouteSettings(name: fallbackRouteName));
+  }
+
+  static bool _shouldForceEmailVerification(User? user) {
+    if (user == null) return false;
+    if (FeatureFlags.emailVerificationBypassUids.contains(user.uid)) {
+      return false;
+    }
+    if (!requiresEmailVerification(user.email)) return false;
+    if (user.emailVerified) return false;
+    final storage = _graceStorage;
+    if (storage == null) return true;
+    return !storage.hasValidDeadline(user.uid);
+  }
+}
+
+----------------- END FILE: modules/core/config/app_routes.dart ----------------
+
+------------------- FILE: modules/core/config/app_theme.dart -------------------
+// modules/core/config/app_theme.dart
+import 'package:flutter/material.dart';
+
+/// Paleta oficial 100 Mujeres Trabajando
+class AppTheme {
+  // === COLORES DE MARCA ===
+  static const Color deepBlue = Color(0xFF2B257E); // títulos, iconos, texto
+  static const Color cyan = Color(0xFF00AEEF); // acentos, activos, links
+  static const Color lightBg = Color(0xFFF8F9FB);
+
+  // Compatibilidad / gradientes existentes
+  static const Color purpleDark = Color(0xFF1B2459);
+  static const Color purpleMedium = Color(0xFF5C39B5);
+  static const Color purpleLight = Color(0xFF6633CC);
+  static const Color pinkGradient = Color(0xFFE05CA0);
+  static const Color pinkAccent = Color(0xFFE74B77);
+  static const Color blue = Color(0xFF00AEEF);
+  static const Color blueLight = Color(0xFF00CFFF);
+  static const Color white = Colors.white;
+  static const Color black = Colors.black;
+
+  // Accesibilidad
+  static const double textScaleFactor = 1;
+
+  // Helper: color de relleno para inputs en fondos oscuros/gradientes
+  static Color fieldFillOnOverlay(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // Leve transparencia para integrarse con gradiente.
+    return (isDark ? Colors.white : Colors.white).withValues(alpha: 0.30);
+  }
+
+  static ThemeData get lightTheme {
+    final base = ThemeData(
+      useMaterial3: true,
+      primaryColor: deepBlue,
+      colorScheme: const ColorScheme.light(
+        primary: deepBlue,
+        secondary: cyan,
+        surface: white,
+      ),
+      scaffoldBackgroundColor: white,
+      textTheme: const TextTheme(
+        bodyLarge: TextStyle(fontSize: 16, color: black),
+        bodyMedium: TextStyle(fontSize: 14, color: black),
+      ),
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        backgroundColor: white,
+        selectedItemColor: deepBlue,
+        unselectedItemColor: Colors.grey,
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: white,
+        foregroundColor: deepBlue,
+        centerTitle: true,
+        elevation: 0,
+      ),
+    );
+
+    // InputDecoration uniforme en claro
+    final input = base.inputDecorationTheme.copyWith(
+      filled: true,
+      fillColor: white,
+      border: OutlineInputBorder(
+        borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.08)),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.08)),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderSide: const BorderSide(color: cyan, width: 1.2),
+        borderRadius: BorderRadius.circular(24),
+      ),
+    );
+
+    return base.copyWith(inputDecorationTheme: input);
+  }
+
+  static ThemeData get darkTheme {
+    final base = ThemeData(
+      useMaterial3: true,
+      primaryColor: deepBlue,
+      colorScheme: const ColorScheme.dark(
+        primary: deepBlue,
+        secondary: cyan,
+        surface: purpleMedium,
+      ),
+      scaffoldBackgroundColor: black,
+      textTheme: const TextTheme(
+        bodyLarge: TextStyle(fontSize: 16, color: white),
+        bodyMedium: TextStyle(fontSize: 14, color: white),
+      ),
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        backgroundColor: purpleDark,
+        selectedItemColor: cyan,
+        unselectedItemColor: Colors.grey,
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Colors.black,
+        foregroundColor: white,
+        centerTitle: true,
+        elevation: 0,
+      ),
+    );
+
+    // InputDecoration uniforme en oscuro
+    final input = base.inputDecorationTheme.copyWith(
+      filled: true,
+      // Fondo más oscuro con leve transparencia para evitar “parches” blancos
+      fillColor: Colors.white.withValues(alpha: 0.06),
+      border: OutlineInputBorder(
+        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.14)),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.14)),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderSide: const BorderSide(color: cyan, width: 1.2),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      labelStyle: const TextStyle(color: Colors.white70),
+      hintStyle: const TextStyle(color: Colors.white60),
+    );
+
+    return base.copyWith(inputDecorationTheme: input);
+  }
+}
+
+----------------- END FILE: modules/core/config/app_theme.dart -----------------
+
+------------------ FILE: modules/core/config/collections.dart ------------------
+class Col {
+  static const users = 'users';
+  static const cedulas = 'cedulas';
+
+  static const products = 'products';
+  static const presentations = 'presentations'; // subcolección de products
+  static const orders = 'orders';
+
+  static const homeConfig = 'home_config';
+  static const adminAccess = 'admin_access_requests';
+  static const categories = 'categories';
+
+  // Nuevo
+  static const pickupPoints = 'pickup_points';
+  static const ordersConfig = 'orders_config'; // doc: settings
+}
+
+---------------- END FILE: modules/core/config/collections.dart ----------------
+
+----------------- FILE: modules/core/config/feature_flags.dart -----------------
+// lib/modules/core/config/feature_flags.dart
+import 'package:flutter/foundation.dart' show kReleaseMode;
+
+class FeatureFlags {
+
+  /// 'required' (prod), 'soft' (dev) o 'off'
+  static final String appCheckClientMode = kReleaseMode ? 'required' : 'soft';
+
+  static const Duration appCheckWarmupMinInterval = Duration(minutes: 3);
+
+  /// Mostrar el badge en debug
+  static const bool appCheckBadgeEnabled = !kReleaseMode;
+
+  /// Imprime el Debug Secret al arrancar (solo debug)
+  static const bool appCheckPrintDebugSecretOnBoot = true;
+
+  /// Preferimos reset por Functions
+  static const bool serverResetPreferred = true;
+
+  /// En DEV permite renderizar placeholders cuando no hay datos
+  static const bool useDevPlaceholdersInUI = !kReleaseMode;
+
+  /// UIDs con bypass permanente de verificación de correo.
+  static const List<String> emailVerificationBypassUids = [
+    'joZtn77aRKPfQb9BmUhrZlTFGMY2', // SUPER principal
+  ];
+}
+
+--------------- END FILE: modules/core/config/feature_flags.dart ---------------
+
+----------------- FILE: modules/core/config/storage_config.dart ----------------
+class StorageConfig {
+  // CLOUDINARY: crea un "unsigned upload preset" con límites de tamaño/tipos
+  static const cloudName = 'diopytenw';
+  static const uploadPreset = 'unsigned_app_upload';
+  static const folder = 'app100mt';
+
+  // límites cliente
+  static const maxFileBytes = 5 * 1024 * 1024; // 5 MB
+  static const allowedMime = <String>{
+    'image/jpeg',
+    'image/png',
+    'application/pdf',
+  };
+}
+
+--------------- END FILE: modules/core/config/storage_config.dart --------------
+
+----------------- FILE: modules/core/config/storage_flags.dart -----------------
+class StorageFlags {
+  // Permite subir a Firebase Storage si Cloudinary responde error.
+  static const bool enableFirebaseFallback = false;
+  static const String profilesFolder = 'app100mt/profiles';
+  static const String catalogFolder = 'app100mt/catalog';
+  static const String ordersFolder   = 'app100mt/orders';
+}
+
+--------------- END FILE: modules/core/config/storage_flags.dart ---------------
+
+Dentro de /dev:
+
+----------------- FILE: modules/core/dev/dev_placeholders.dart -----------------
+// lib/modules/core/dev/dev_placeholders.dart
+import '../../features/home/domain/entities/product_summary.dart';
+import '../../features/catalog/domain/entities/public_product.dart';
+import '../../features/catalog/domain/entities/presentation.dart';
+
+class DevPlaceholders {
+  /// Chips "Explorar por tipo" en Home
+  static List<ProductSummary> featured() => const [
+        ProductSummary(id: 'ph-1', name: 'Empanadas'),
+        ProductSummary(id: 'ph-2', name: 'Muchines'),
+        ProductSummary(id: 'ph-3', name: 'Corviches'),
+        ProductSummary(id: 'ph-4', name: 'Promociones'),
+      ];
+
+  /// Lista de productos para el grid del catalogo
+  static List<PublicProduct> catalogGrid() => const [
+        PublicProduct(id: 'p1', name: 'Empanada de queso', categoryId: 'demo', basePrice: 0),
+        PublicProduct(id: 'p2', name: 'Empanada de pollo', categoryId: 'demo', basePrice: 0),
+        PublicProduct(id: 'p3', name: 'Muchin de yuca', categoryId: 'demo', basePrice: 0),
+        PublicProduct(id: 'p4', name: 'Corviche clasico', categoryId: 'demo', basePrice: 0),
+        PublicProduct(id: 'p5', name: 'Combo desayuno', categoryId: 'demo', basePrice: 0),
+        PublicProduct(id: 'p6', name: 'Jugo natural', categoryId: 'demo', basePrice: 0),
+      ];
+
+  /// Presentaciones de ejemplo si un producto aun no tiene
+  static List<Presentation> presentations() => const [
+        Presentation(id: 'pr1', name: 'Unidad', unitPrice: 1.50, minQty: 1),
+        Presentation(id: 'pr2', name: 'Pack 6', unitPrice: 8.50, minQty: 1),
+      ];
+}
+
+--------------- END FILE: modules/core/dev/dev_placeholders.dart ---------------
+
+Dentro de /entities:
+
+--------------- FILE: modules/core/entities/image_crop_data.dart ---------------
+class ImageCropData {
+  final double ratio;
+  final double left;
+  final double top;
+  final double width;
+  final double height;
+  final int originalWidth;
+  final int originalHeight;
+
+  const ImageCropData({
+    required this.ratio,
+    required this.left,
+    required this.top,
+    required this.width,
+    required this.height,
+    required this.originalWidth,
+    required this.originalHeight,
+  });
+
+  factory ImageCropData.fromMap(Map<String, dynamic>? map) {
+    if (map == null) return const ImageCropData.zero();
+    return ImageCropData(
+      ratio: (map['ratio'] ?? 1.0).toDouble(),
+      left: (map['left'] ?? 0).toDouble(),
+      top: (map['top'] ?? 0).toDouble(),
+      width: (map['width'] ?? 0).toDouble(),
+      height: (map['height'] ?? 0).toDouble(),
+      originalWidth: (map['originalWidth'] ?? 0) as int,
+      originalHeight: (map['originalHeight'] ?? 0) as int,
+    );
+  }
+
+  const ImageCropData.zero()
+      : ratio = 1,
+        left = 0,
+        top = 0,
+        width = 0,
+        height = 0,
+        originalWidth = 0,
+        originalHeight = 0;
+
+  Map<String, dynamic> toMap() {
+    return {
+      'ratio': ratio,
+      'left': left,
+      'top': top,
+      'width': width,
+      'height': height,
+      'originalWidth': originalWidth,
+      'originalHeight': originalHeight,
+    };
+  }
+}
+
+------------- END FILE: modules/core/entities/image_crop_data.dart -------------
+
+Dentro de /net:
+
+-------------------- FILE: modules/core/net/net_service.dart -------------------
+// lib/modules/core/net/net_service.dart
+import 'dart:async';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:http/http.dart' as http;
+
+/// Servicio que emite "¿hay Internet real?" (true/false).
+/// Combina estado de red + ping ligero a un endpoint 204.
+class NetService {
+  final Connectivity _connectivity;
+  final http.Client _client;
+  final Duration probeEvery;
+  final Duration timeout;
+
+  final _ctrl = StreamController<bool>.broadcast();
+  Timer? _timer;
+  bool _last = true;
+
+  Stream<bool> get hasInternet$ => _ctrl.stream;
+
+  NetService({
+    Connectivity? connectivity,
+    http.Client? client,
+    this.probeEvery = const Duration(seconds: 5),
+    this.timeout = const Duration(seconds: 3),
+  })  : _connectivity = connectivity ?? Connectivity(),
+        _client = client ?? http.Client() {
+    _bootstrap();
+  }
+
+  Future<void> _bootstrap() async {
+    // Emisión inicial
+    _emit(await _probe());
+    // Suscripción a cambios de red
+    _connectivity.onConnectivityChanged.listen((_) async {
+      _emit(await _probe());
+    });
+    // Probe periódico para detectar intermitencia
+    _timer = Timer.periodic(probeEvery, (_) async {
+      _emit(await _probe());
+    });
+  }
+
+  void _emit(bool v) {
+    if (v == _last) return;
+    _last = v;
+    if (!_ctrl.isClosed) _ctrl.add(v);
+  }
+
+  Future<bool> _probe() async {
+    final results = await _connectivity.checkConnectivity();
+    if (results.contains(ConnectivityResult.none)) return false;
+
+    // Endpoint super liviano que responde 204
+    const url = 'https://www.gstatic.com/generate_204';
+    try {
+      final r = await _client
+          .head(Uri.parse(url))
+          .timeout(timeout);
+      if (r.statusCode == 204 || (r.statusCode >= 200 && r.statusCode < 400)) {
+        return true;
+      }
+    } catch (_) {
+      // fallback a GET en caso de que el HEAD sea bloqueado
+      try {
+        final r = await _client
+            .get(Uri.parse(url))
+            .timeout(timeout);
+        if (r.statusCode == 204 || (r.statusCode >= 200 && r.statusCode < 400)) {
+          return true;
+        }
+      } catch (_) {}
+    }
+    return false;
+  }
+
+  Future<void> dispose() async {
+    _timer?.cancel();
+    await _ctrl.close();
+    _client.close();
+  }
+}
+
+------------------ END FILE: modules/core/net/net_service.dart -----------------
+
+Dentro de /services:
+
+Dentro de /appcheck:
+
+---------- FILE: modules/core/services/appcheck/app_check_warmup.dart ----------
+// lib/modules/core/services/appcheck/app_check_warmup.dart
+import 'dart:math' as math;
+import 'package:firebase_app_check/firebase_app_check.dart';
+import '../../config/feature_flags.dart' as ff;
+
+/// Warm-up controlado para App Check (evita "Too many attempts").
+/// - Respeta cooldown
+/// - Evita concurrencia
+/// - Añade pequeño jitter para no colisionar con otros SDKs
+class AppCheckWarmup {
+  static DateTime? _lastAttempt;
+  static bool _running = false;
+
+  static Future<void> warmUpIfNeeded() async {
+    if (ff.FeatureFlags.appCheckClientMode == 'off') return;
+    if (_running) return;
+
+    final now = DateTime.now();
+    final minGap = ff.FeatureFlags.appCheckWarmupMinInterval;
+
+    if (_lastAttempt != null && now.difference(_lastAttempt!) < minGap) {
+      return; // dentro del cooldown
+    }
+
+    _running = true;
+    _lastAttempt = now;
+
+    try {
+      // Jitter de 0–250ms para evitar carreras con otros módulos (Firestore)
+      final jitter = Duration(milliseconds: math.Random().nextInt(250));
+      await Future<void>.delayed(jitter);
+      // Pedimos token sin forzar refresh; el SDK cachea
+      await FirebaseAppCheck.instance.getToken(false);
+    } catch (_) {
+      // No interrumpimos UX
+    } finally {
+      _running = false;
+    }
+  }
+}
+
+-------- END FILE: modules/core/services/appcheck/app_check_warmup.dart --------
+
+Dentro de /email:
+
+---------- FILE: modules/core/services/email/email_reset_provider.dart ---------
+// lib/modules/core/services/email/email_reset_provider.dart
+
+abstract class EmailResetProvider {
+  Future<void> sendPasswordResetEmail(String email);
+  String get providerId; // ej. "firebase"
+}
+
+-------- END FILE: modules/core/services/email/email_reset_provider.dart -------
+
+----- FILE: modules/core/services/email/firebase_email_reset_provider.dart -----
+// lib/modules/core/services/email/firebase_email_reset_provider.dart
+import 'package:firebase_auth/firebase_auth.dart';
+import 'email_reset_provider.dart';
+
+class FirebaseEmailResetProvider implements EmailResetProvider {
+  final FirebaseAuth _auth;
+  FirebaseEmailResetProvider(this._auth);
+
+  @override
+  String get providerId => 'firebase';
+
+  @override
+  Future<void> sendPasswordResetEmail(String email) {
+    return _auth.sendPasswordResetEmail(email: email.trim());
+  }
+}
+
+--- END FILE: modules/core/services/email/firebase_email_reset_provider.dart ---
+
+Dentro de /functions:
+
+---------- FILE: modules/core/services/functions/functions_client.dart ---------
+// lib/modules/core/services/functions/functions_client.dart
+import 'dart:math' as math;
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_core/firebase_core.dart';
+import '../../config/feature_flags.dart' as ff;
+import '../appcheck/app_check_warmup.dart';
+
+class FunctionsClient {
+  final FirebaseFunctions _fx;
+
+  FunctionsClient({FirebaseFunctions? functions, String region = 'us-central1'})
+    : _fx =
+          functions ??
+          FirebaseFunctions.instanceFor(app: Firebase.app(), region: region);
+
+  Future<dynamic> call(
+    String name, {
+    Map<String, dynamic> data = const {},
+    Duration timeout = const Duration(seconds: 30),
+  }) async {
+    if (ff.FeatureFlags.appCheckClientMode != 'off') {
+      await AppCheckWarmup.warmUpIfNeeded();
+    }
+
+    final callable = _fx.httpsCallable(
+      name,
+      options: HttpsCallableOptions(timeout: timeout),
+    );
+
+    int attempts = 0;
+    FirebaseFunctionsException? last;
+
+    while (attempts < 3) {
+      try {
+        final res = await callable.call<Map<String, dynamic>>(data);
+        return res.data;
+      } on FirebaseFunctionsException catch (e) {
+        last = e;
+        final code = e.code.toLowerCase();
+
+        // Reintentos solo para rate-limit/transitorios
+        final transient =
+            code == 'resource-exhausted' ||
+            code == 'too-many-requests' ||
+            code == 'unavailable' ||
+            code == 'deadline-exceeded';
+
+        if (!transient) break;
+
+        attempts += 1;
+        final backoffMs = (200 * math.pow(2, attempts)).toInt();
+        final jitter = math.Random().nextInt(250);
+        await Future<void>.delayed(Duration(milliseconds: backoffMs + jitter));
+      }
+    }
+
+    // Mapeo final de errores
+    if (last != null) {
+      final code = last.code.toLowerCase();
+      switch (code) {
+        case 'permission-denied':
+        case 'unauthenticated':
+        case 'failed-precondition':
+          throw Exception('No autorizado. Intenta de nuevo o usa el correo.');
+        case 'invalid-argument':
+          throw Exception('Dato inválido. Revisa e intenta de nuevo.');
+        case 'not-found':
+          throw Exception('No encontramos una cuenta con esos datos.');
+        case 'resource-exhausted':
+        case 'too-many-requests':
+          throw Exception('Demasiados intentos. Intenta más tarde.');
+        case 'deadline-exceeded':
+        case 'unavailable':
+          throw Exception('Servidor sin respuesta. Intenta nuevamente.');
+        default:
+          throw Exception('Ocurrió un problema al ejecutar la función.');
+      }
+    }
+    throw Exception('Ocurrió un problema al ejecutar la función.');
+  }
+}
+
+-------- END FILE: modules/core/services/functions/functions_client.dart -------
+
+Dentro de /media:
+
+------------- FILE: modules/core/services/media/i_image_source.dart ------------
+// Define una interfaz y modelos simples para el servicio de picking de imágenes.
+import 'dart:typed_data';
+
+enum AppImageSource { camera, gallery }
+
+class PickedImage {
+  final Uint8List bytes;
+  final String? fileName;
+  final String? mimeType;
+  const PickedImage({required this.bytes, this.fileName, this.mimeType});
+}
+
+abstract class IImagePickerService {
+  Future<PickedImage?> pick(AppImageSource source);
+}
+
+----------- END FILE: modules/core/services/media/i_image_source.dart ----------
+
+---------- FILE: modules/core/services/media/image_picker_service.dart ---------
+import 'dart:typed_data';
+import 'package:image_picker/image_picker.dart';
+import 'package:mime/mime.dart';
+import 'i_image_source.dart';
+
+/// Implementación usando image_picker (oficial).
+class ImagePickerService implements IImagePickerService {
+  final ImagePicker _picker;
+  ImagePickerService({ImagePicker? picker}) : _picker = picker ?? ImagePicker();
+
+  @override
+  Future<PickedImage?> pick(AppImageSource source) async {
+    final ImageSource src =
+        source == AppImageSource.camera ? ImageSource.camera : ImageSource.gallery;
+
+    final XFile? x = await _picker.pickImage(source: src);
+    if (x == null) return null;
+
+    final Uint8List bytes = await x.readAsBytes();
+    final String? mime = x.mimeType ?? lookupMimeType(x.name, headerBytes: bytes);
+
+    return PickedImage(bytes: bytes, fileName: x.name, mimeType: mime);
+  }
+}
+
+-------- END FILE: modules/core/services/media/image_picker_service.dart -------
+
+Dentro de /otp:
+
+---------- FILE: modules/core/services/otp/firebase_otp_provider.dart ----------
+// lib/modules/core/services/otp/firebase_otp_provider.dart
+import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'otp_provider.dart';
+
+/// Proveedor OTP vía Firebase Auth (nativo).
+/// - Soporta reenvío con `forceResendingToken`.
+/// - Devuelve verificationId en startPhoneVerification.
+/// - Al validar el código, inicia sesión temporalmente para obtener un idToken
+///   que el backend usará como "proof".
+/// - Red de seguridad: si la verificación creó un usuario "teléfono-solo"
+///   *justo ahora* (ephemeral), lo elimina automáticamente para evitar duplicados.
+class FirebaseOtpProvider implements OtpProvider {
+  final FirebaseAuth _auth;
+
+  // Guarda el token de reenvío por teléfono E.164
+  final Map<String, int> _resendTokens = {};
+
+  FirebaseOtpProvider(this._auth) {
+    try {
+      _auth.setLanguageCode('es');
+    } catch (_) {}
+  }
+
+  @override
+  String get providerId => 'firebase';
+
+  @override
+  Future<String> startPhoneVerification(String phoneE164) async {
+    final completer = Completer<String>();
+
+    await _auth.verifyPhoneNumber(
+      phoneNumber: phoneE164,
+      timeout: const Duration(seconds: 120),
+      forceResendingToken: _resendTokens[phoneE164],
+      verificationCompleted: (PhoneAuthCredential credential) async {
+        // ANDROID: Autoverificación. NO hacemos sign-in automático aquí
+        // porque el flujo de recuperación está separado por pasos.
+      },
+      verificationFailed: (FirebaseAuthException e) {
+        if (completer.isCompleted) return;
+        final code = (e.code).toLowerCase();
+        final msg = switch (code) {
+          'invalid-phone-number' => 'Teléfono inválido. Verifica el formato.',
+          'captcha-check-failed' =>
+            'Fallo de verificación. Actualiza Google Play Services e intenta de nuevo.',
+          'too-many-requests' =>
+            'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.',
+          'quota-exceeded' =>
+            'Límite de SMS alcanzado temporalmente. Prueba más tarde o usa un número de prueba.',
+          _ => e.message ?? 'No se pudo iniciar la verificación por SMS.',
+        };
+        completer.completeError(Exception(msg));
+      },
+      codeSent: (String verificationId, int? resendToken) {
+        if (resendToken != null) {
+          _resendTokens[phoneE164] = resendToken;
+        }
+        if (!completer.isCompleted) {
+          completer.complete(verificationId);
+        }
+      },
+      codeAutoRetrievalTimeout: (String verificationId) {
+        if (!completer.isCompleted) {
+          completer.complete(verificationId); // aún útil manualmente
+        }
+      },
+    );
+
+    return completer.future;
+  }
+
+  // Heurística segura para detectar un usuario "efímero" recién creado
+  // por verificación de teléfono:
+  bool _isLikelyEphemeralPhoneUser(User u) {
+    final providers = u.providerData.map((p) => p.providerId).toSet();
+    final onlyPhone = providers.length == 1 && providers.contains('phone');
+    final hasEmail = (u.email ?? '').trim().isNotEmpty;
+
+    final now = DateTime.now();
+    final created = u.metadata.creationTime;
+    final lastSignIn = u.metadata.lastSignInTime;
+
+    final createdRecently =
+        created != null && now.difference(created).inMinutes <= 2;
+    final firstSignInNow =
+        created != null &&
+        lastSignIn != null &&
+        (lastSignIn.difference(created).inSeconds).abs() <= 10;
+
+    // Si sólo tiene provider "phone", sin correo, y nació hace segundos,
+    // es casi seguro un usuario temporal.
+    return onlyPhone && !hasEmail && createdRecently && firstSignInNow;
+  }
+
+  @override
+  Future<String> signInAndGetAuthProof({
+    required String verificationId,
+    required String smsCode,
+  }) async {
+    final credential = PhoneAuthProvider.credential(
+      verificationId: verificationId,
+      smsCode: smsCode,
+    );
+
+    User? signedIn;
+    try {
+      // Cierra cualquier sesión previa para evitar confusiones
+      try {
+        await _auth.signOut();
+      } catch (_) {}
+
+      // Inicia sesión con el código recibido (esto puede:
+      //  a) Ingresar a la cuenta que YA tenía el teléfono enlazado (ideal)
+      //  b) Crear un usuario "phone-only" nuevo (no ideal → lo limpiaremos)
+      final userCred = await _auth.signInWithCredential(credential);
+      signedIn = userCred.user;
+      if (signedIn == null) {
+        throw Exception('No se pudo autenticar con el código recibido.');
+      }
+
+      // IdToken (proof) para el backend
+      final idToken = await signedIn.getIdToken(true);
+      if (idToken == null || idToken.isEmpty) {
+        throw Exception('No se pudo obtener el token del proveedor.');
+      }
+
+      // 🔒 Limpieza de *sólo* usuarios efímeros creados por verificación:
+      try {
+        if (_isLikelyEphemeralPhoneUser(signedIn)) {
+          await signedIn.delete(); // ← elimina al “duplicado temporal”
+        }
+      } catch (_) {
+        // Si falla, al menos cerramos sesión más abajo.
+      }
+
+      // Cierra sesión para devolver el control al flujo de la app
+      try {
+        await _auth.signOut();
+      } catch (_) {}
+
+      return idToken;
+    } on FirebaseAuthException catch (e) {
+      final code = (e.code).toLowerCase();
+      final msg = switch (code) {
+        'invalid-verification-code' ||
+        'session-expired' => 'Código inválido o expirado. Solicita uno nuevo.',
+        'too-many-requests' =>
+          'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.',
+        _ => 'No se pudo validar el código. Inténtalo nuevamente.',
+      };
+      throw Exception(msg);
+    } finally {
+      // Asegura salir si algo quedó firmado
+      try {
+        await _auth.signOut();
+      } catch (_) {}
+    }
+  }
+}
+
+-------- END FILE: modules/core/services/otp/firebase_otp_provider.dart --------
+
+--------------- FILE: modules/core/services/otp/otp_provider.dart --------------
+// lib/modules/core/services/otp/otp_provider.dart
+
+/// Contrato para enviar/validar OTP por SMS sin atar la app a Firebase.
+/// Si cambias de backend, sólo implementas esta interfaz.
+abstract class OtpProvider {
+  /// Inicia la verificación y devuelve un `verificationId` (o equivalente).
+  Future<String> startPhoneVerification(String phoneE164);
+
+  /// Valida el OTP y retorna un "auth proof" (token del proveedor) para
+  /// que el backend confirme el cambio de contraseña.
+  Future<String> signInAndGetAuthProof({
+    required String verificationId,
+    required String smsCode,
+  });
+
+  /// Identificador del proveedor (ej. "firebase", "cognito", etc.)
+  String get providerId;
+}
+
+------------- END FILE: modules/core/services/otp/otp_provider.dart ------------
+
+Dentro de /phone_link:
+
+--- FILE: modules/core/services/phone_link/firebase_phone_link_provider.dart ---
+// lib/modules/core/services/phone_link/firebase_phone_link_provider.dart
+import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'phone_link_provider.dart';
+
+class FirebasePhoneLinkProvider implements PhoneLinkProvider {
+  final FirebaseAuth _auth;
+  final Map<String, int> _resend = {};
+
+  FirebasePhoneLinkProvider(this._auth) {
+    try {
+      _auth.setLanguageCode('es');
+    } catch (_) {}
+  }
+
+  @override
+  Future<String> startLinkVerification(String phoneE164) async {
+    final c = Completer<String>();
+    await _auth.verifyPhoneNumber(
+      phoneNumber: phoneE164,
+      timeout: const Duration(seconds: 120),
+      forceResendingToken: _resend[phoneE164],
+      verificationCompleted: (_) {},
+      verificationFailed: (e) {
+        final code = e.code.toLowerCase();
+        final msg = switch (code) {
+          'invalid-phone-number' => 'Teléfono inválido.',
+          'credential-already-in-use' =>
+            'Este teléfono ya está en otra cuenta.',
+          'too-many-requests' => 'Demasiados intentos. Espera unos minutos.',
+          _ => e.message ?? 'No se pudo iniciar la verificación.',
+        };
+        if (!c.isCompleted) c.completeError(Exception(msg));
+      },
+      codeSent: (id, token) {
+        if (token != null) _resend[phoneE164] = token;
+        if (!c.isCompleted) c.complete(id);
+      },
+      codeAutoRetrievalTimeout: (id) {
+        if (!c.isCompleted) c.complete(id);
+      },
+    );
+    return c.future;
+  }
+
+  @override
+  Future<void> linkWithSmsCode({
+    required String verificationId,
+    required String smsCode,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw Exception('Debes iniciar sesión primero.');
+    }
+
+    final cred = PhoneAuthProvider.credential(
+      verificationId: verificationId,
+      smsCode: smsCode,
+    );
+
+    try {
+      await user.linkWithCredential(cred);
+    } on FirebaseAuthException catch (e) {
+      final code = e.code.toLowerCase();
+      final msg = switch (code) {
+        'provider-already-linked' => 'El teléfono ya estaba enlazado.',
+        'credential-already-in-use' =>
+          'Este teléfono ya pertenece a otra cuenta.',
+        'requires-recent-login' =>
+          'Vuelve a iniciar sesión para enlazar el teléfono.',
+        _ => e.message ?? 'No se pudo enlazar el teléfono.',
+      };
+      throw Exception(msg);
+    }
+  }
+}
+
+- END FILE: modules/core/services/phone_link/firebase_phone_link_provider.dart -
+
+-------- FILE: modules/core/services/phone_link/phone_link_provider.dart -------
+// lib/modules/core/services/phone_link/phone_link_provider.dart
+abstract class PhoneLinkProvider {
+  /// Lanza la verificación y devuelve un verificationId.
+  Future<String> startLinkVerification(String phoneE164);
+
+  /// Confirma el SMS y ENLAZA el teléfono al usuario actual.
+  Future<void> linkWithSmsCode({
+    required String verificationId,
+    required String smsCode,
+  });
+}
+
+------ END FILE: modules/core/services/phone_link/phone_link_provider.dart -----
+
+Dentro de /storage:
+
+- FILE: modules/core/services/storage/cloudinary_function_storage_service.dart -
+import 'dart:convert';
+import 'dart:typed_data';
+import 'package:cloud_functions/cloud_functions.dart';
+import 'i_file_storage_service.dart';
+
+/// Subida a Cloudinary vía Callable Function `uploadProfileImage` (us-central1).
+class CloudinaryFunctionStorageService implements IFileStorageService {
+  final FirebaseFunctions _fn;
+  CloudinaryFunctionStorageService({FirebaseFunctions? functions})
+      : _fn = functions ?? FirebaseFunctions.instanceFor(region: 'us-central1');
+
+  @override
+  Future<UploadedFile> uploadBytes({
+    required Uint8List bytes,
+    required String fileName,
+    required String contentType,
+    String? folder,      // decidido por el servidor
+    String? publicIdHint // decidido por el servidor
+  }) async {
+    final callable = _fn.httpsCallable('uploadProfileImage');
+
+    final resp = await callable.call(<String, dynamic>{
+      'bytesBase64': base64Encode(bytes),
+      'contentType': contentType,
+      'fileName': fileName,
+    });
+
+    final data = (resp.data as Map).cast<String, dynamic>();
+    final url = (data['url'] ?? '') as String;
+    final publicId = (data['publicId'] ?? '') as String?;
+
+    if (url.isEmpty) {
+      throw Exception('Cloudinary function did not return url');
+    }
+
+    return UploadedFile(
+      url: url,
+      provider: 'cloudinary',
+      fileName: fileName,
+      contentType: contentType,
+      size: bytes.length,
+      publicId: publicId,
+    );
+  }
+}
+
+ END FILE: modules/core/services/storage/cloudinary_function_storage_service.dart 
+
+------ FILE: modules/core/services/storage/cloudinary_maintenance_api.dart -----
+import 'package:cloud_functions/cloud_functions.dart';
+
+/// Encapsula Cloud Functions de mantenimiento de Cloudinary.
+/// - pruneUserProfileImages({uid, keep}): conserva N más recientes.
+/// - deleteByPublicId(publicId): borra un asset puntual.
+///
+/// Nota: fija región us-central1 (coincide con tu deploy).
+class CloudinaryMaintenanceApi {
+  final FirebaseFunctions _fn;
+
+  CloudinaryMaintenanceApi({FirebaseFunctions? functions})
+    : _fn = functions ?? FirebaseFunctions.instanceFor(region: 'us-central1');
+
+  Future<void> pruneUserProfileImages({
+    required String uid,
+    int keep = 1,
+  }) async {
+    final callable = _fn.httpsCallable('pruneUserProfileImages');
+    try {
+      await callable.call(<String, dynamic>{'uid': uid, 'keep': keep});
+    } on FirebaseFunctionsException catch (e) {
+      // Silenciamos condiciones esperables para no ensuciar logs.
+      final msg = (e.message ?? '').toLowerCase();
+      final code = e.code.toLowerCase();
+      final looksHarmless =
+          code == 'failed-precondition' ||
+          msg.contains('search') &&
+              msg.contains('not') &&
+              msg.contains('enabled') ||
+          msg.contains('not found') ||
+          msg.contains('no such') ||
+          msg.contains('empty') ||
+          msg.contains('no resources');
+      if (looksHarmless) return;
+      rethrow;
+    }
+  }
+
+  Future<void> deleteByPublicId(String publicId) async {
+    final callable = _fn.httpsCallable('deleteCloudinaryPublicId');
+    try {
+      await callable.call(<String, dynamic>{'publicId': publicId});
+    } on FirebaseFunctionsException catch (e) {
+      final msg = (e.message ?? '').toLowerCase();
+      if (msg.contains('not_found') || msg.contains('not found')) {
+        return; // idempotente
+      }
+      rethrow;
+    }
+  }
+}
+
+---- END FILE: modules/core/services/storage/cloudinary_maintenance_api.dart ---
+
+------ FILE: modules/core/services/storage/cloudinary_storage_service.dart -----
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
+import '../../config/storage_config.dart';
+import 'i_file_storage_service.dart';
+
+/// Subida UNSIGNED a Cloudinary.
+/// - Requiere un upload preset UNSIGNED válido.
+/// - Loggea la respuesta para debugging y parsea mensajes de error.
+class CloudinaryStorageService implements IFileStorageService {
+  final String cloudName;
+  final String uploadPreset;
+  final String folder;
+
+  CloudinaryStorageService({
+    this.cloudName = StorageConfig.cloudName,
+    this.uploadPreset = StorageConfig.uploadPreset,
+    this.folder = StorageConfig.folder,
+  });
+
+  @override
+  Future<UploadedFile> uploadBytes({
+    required Uint8List bytes,
+    required String fileName,
+    required String contentType,
+    String? folder,
+    String? publicIdHint,
+  }) async {
+    final uri = Uri.parse(
+      'https://api.cloudinary.com/v1_1/$cloudName/auto/upload',
+    );
+
+    final request = http.MultipartRequest('POST', uri)
+      ..fields['upload_preset'] = uploadPreset;
+
+    final targetFolder = (folder?.isNotEmpty ?? false) ? folder! : this.folder;
+    if (targetFolder.isNotEmpty) {
+      request.fields['folder'] = targetFolder;
+    }
+    if (publicIdHint != null && publicIdHint.trim().isNotEmpty) {
+      request.fields['public_id'] = publicIdHint.trim();
+    }
+    // Nota: en unsigned uploads Cloudinary no permite "use_filename".
+    // Si quieres forzar el nombre, usa "filename_override" (permitido).
+    request.fields['filename_override'] = fileName;
+
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        'file',
+        bytes,
+        filename: fileName,
+        contentType: MediaType.parse(contentType),
+      ),
+    );
+
+    final streamed = await request.send();
+    final resp = await http.Response.fromStream(streamed);
+
+    if (kDebugMode) {
+      debugPrint(
+        '[Cloudinary] upload ${request.fields['public_id'] ?? fileName} '
+        '-> status ${resp.statusCode} body: ${resp.body}',
+      );
+    }
+
+    if (resp.statusCode < 200 || resp.statusCode >= 300) {
+      String? err;
+      try {
+        final data = json.decode(resp.body) as Map<String, dynamic>;
+        err = (data['error'] as Map?)?['message']?.toString();
+      } catch (_) {}
+      if (err != null && err.isNotEmpty) {
+        if (err.toLowerCase().contains('upload preset')) {
+          throw Exception('Cloudinary: upload_preset invalido o no UNSIGNED.');
+        }
+        throw Exception('Cloudinary: $err');
+      }
+      throw Exception(
+        'Fallo al subir archivo a Cloudinary (${resp.statusCode}).',
+      );
+    }
+
+    final data = json.decode(resp.body) as Map<String, dynamic>;
+    final url = (data['secure_url'] ?? data['url']) as String;
+    final publicId = (data['public_id'] ?? '') as String?;
+
+    return UploadedFile(
+      url: url,
+      provider: 'cloudinary',
+      fileName: fileName,
+      contentType: contentType,
+      size: bytes.length,
+      publicId: publicId,
+    );
+  }
+}
+
+---- END FILE: modules/core/services/storage/cloudinary_storage_service.dart ---
+
+------- FILE: modules/core/services/storage/firebase_storage_service.dart ------
+import 'dart:typed_data';
+import 'package:firebase_storage/firebase_storage.dart';
+import '../../config/storage_flags.dart';
+import 'i_file_storage_service.dart';
+
+class FirebaseStorageService implements IFileStorageService {
+  final FirebaseStorage _storage;
+  FirebaseStorageService({FirebaseStorage? storage})
+    : _storage = storage ?? FirebaseStorage.instance;
+
+  @override
+  Future<UploadedFile> uploadBytes({
+    required Uint8List bytes,
+    required String fileName,
+    required String contentType,
+    String? folder, 
+    String? publicIdHint, // no usado en Firebase
+  }) async {
+    final targetFolder =
+        (folder?.isNotEmpty ?? false) ? folder! : StorageFlags.profilesFolder;
+    final path = '$targetFolder/$fileName';
+
+    final ref = _storage.ref().child(path);
+    final meta = SettableMetadata(contentType: contentType);
+
+    final task = await ref.putData(bytes, meta);
+    final url = await task.ref.getDownloadURL();
+
+    return UploadedFile(
+      url: url,
+      provider: 'firebase',
+      fileName: fileName,
+      contentType: contentType,
+      size: bytes.length,
+    );
+  }
+}
+
+----- END FILE: modules/core/services/storage/firebase_storage_service.dart ----
+
+-------- FILE: modules/core/services/storage/i_file_storage_service.dart -------
+import 'dart:typed_data';
+
+class UploadedFile {
+  final String url;
+  final String provider; // 'cloudinary' | 'firebase' | ...
+  final String fileName;
+  final String contentType;
+  final int size;
+
+  /// Para Cloudinary: p.ej. app100mt/users/{uid}/profile/abc123
+  final String? publicId;
+
+  UploadedFile({
+    required this.url,
+    required this.provider,
+    required this.fileName,
+    required this.contentType,
+    required this.size,
+    this.publicId,
+  });
+}
+
+abstract class IFileStorageService {
+  Future<UploadedFile> uploadBytes({
+    required Uint8List bytes,
+    required String fileName,
+    required String contentType,
+    String? folder,
+    String? publicIdHint, // opcional: por si quieres sugerir un nombre
+  });
+}
+
+------ END FILE: modules/core/services/storage/i_file_storage_service.dart -----
+
+----------- FILE: modules/core/services/storage/session_storage.dart -----------
+import 'package:shared_preferences/shared_preferences.dart';
+
+class SessionStorage {
+  static const _roleKeyPrefix = 'session_last_role_';
+
+  final SharedPreferences _prefs;
+
+  SessionStorage(this._prefs);
+
+  Future<void> storeRole(String uid, String? role) async {
+    final key = _roleKey(uid);
+    if (role == null || role.isEmpty) {
+      await _prefs.remove(key);
+    } else {
+      await _prefs.setString(key, role);
+    }
+  }
+
+  String? getRole(String uid) => _prefs.getString(_roleKey(uid));
+
+  Future<void> clearRole(String uid) async {
+    await _prefs.remove(_roleKey(uid));
+  }
+
+  String _roleKey(String uid) => '$_roleKeyPrefix$uid';
+}
+
+--------- END FILE: modules/core/services/storage/session_storage.dart ---------
+
+------ FILE: modules/core/services/storage/verification_grace_storage.dart -----
+import 'package:shared_preferences/shared_preferences.dart';
+
+/// Mantiene la fecha límite para permitir acceso temporal a usuarios
+/// que aún no verifican su correo.
+class VerificationGraceStorage {
+  static const _deadlineKeyPrefix = 'email_verification_grace_until_';
+  static const _usedKeyPrefix = 'email_verification_grace_used_';
+  static const _reminderKeyPrefix = 'email_verification_grace_reminder_';
+
+  final SharedPreferences _prefs;
+
+  VerificationGraceStorage(this._prefs);
+
+  DateTime? getDeadline(String uid) {
+    final millis = _prefs.getInt(_deadlineKey(uid));
+    if (millis == null) return null;
+    return DateTime.fromMillisecondsSinceEpoch(millis);
+  }
+
+  bool hasValidDeadline(String uid, {DateTime? now}) {
+    final deadline = getDeadline(uid);
+    if (deadline == null) return false;
+    return (now ?? DateTime.now()).isBefore(deadline);
+  }
+
+  Future<void> saveDeadline(String uid, DateTime deadline) async {
+    await _prefs.setInt(_deadlineKey(uid), deadline.millisecondsSinceEpoch);
+  }
+
+  Future<void> clearDeadline(String uid) async {
+    await _prefs.remove(_deadlineKey(uid));
+  }
+
+  bool hasUsedGrace(String uid) {
+    return _prefs.getBool(_usedKey(uid)) ?? false;
+  }
+
+  Future<void> markGraceUsed(String uid) async {
+    await _prefs.setBool(_usedKey(uid), true);
+  }
+
+  Future<void> clearGraceUsage(String uid) async {
+    await _prefs.remove(_usedKey(uid));
+  }
+
+  DateTime? getLastReminder(String uid) {
+    final millis = _prefs.getInt(_reminderKey(uid));
+    if (millis == null) return null;
+    return DateTime.fromMillisecondsSinceEpoch(millis);
+  }
+
+  bool shouldShowReminder(
+    String uid, {
+    Duration interval = const Duration(days: 1),
+    DateTime? now,
+  }) {
+    final last = getLastReminder(uid);
+    if (last == null) return true;
+    final reference = now ?? DateTime.now();
+    return reference.difference(last) >= interval;
+  }
+
+  Future<void> markReminderShown(String uid, {DateTime? instant}) async {
+    final when = instant ?? DateTime.now();
+    await _prefs.setInt(_reminderKey(uid), when.millisecondsSinceEpoch);
+  }
+
+  String _deadlineKey(String uid) => '$_deadlineKeyPrefix$uid';
+  String _usedKey(String uid) => '$_usedKeyPrefix$uid';
+  String _reminderKey(String uid) => '$_reminderKeyPrefix$uid';
+}
+
+---- END FILE: modules/core/services/storage/verification_grace_storage.dart ---
+
+Dentro de /utils:
+
+Dentro de /data:
+
+---------------- FILE: modules/core/utils/data/image_bytes.dart ----------------
+import 'dart:typed_data';
+import 'package:mime/mime.dart';
+
+class ImageBytesHelper {
+  static String inferExtension(String contentType) {
+    final map = {
+      'image/jpeg': 'jpg',
+      'image/png': 'png',
+      'application/pdf': 'pdf',
+    };
+    return map[contentType] ?? 'bin';
+  }
+
+  static String buildFileName({
+    required String uid,
+    required String base,
+    required String contentType,
+  }) {
+    final ts = DateTime.now().millisecondsSinceEpoch;
+    final ext = inferExtension(contentType);
+    final safe = base.replaceAll(RegExp(r'[^a-zA-Z0-9_\-]'), '_').toLowerCase();
+    return '${uid}_${safe}_$ts.$ext';
+  }
+
+  static String? sniffContentType(Uint8List bytes, {String? fallbackName}) {
+    final mime = lookupMimeType(fallbackName ?? '', headerBytes: bytes);
+    return mime;
+  }
+
+  static int approxKb(Uint8List b) => (b.length / 1024).round();
+  static String humanSize(Uint8List b) =>
+      b.length < 1024 ? '${b.length} B' : '${approxKb(b)} KB';
+}
+
+-------------- END FILE: modules/core/utils/data/image_bytes.dart --------------
+
+Dentro de /errors:
+
+------------- FILE: modules/core/utils/errors/firebase_errors.dart -------------
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
+
+class FirebaseErrorMapper {
+  static String friendly(
+    Object error, {
+    String generic = 'Ocurrió un error inesperado',
+  }) {
+    final msg = error.toString().toLowerCase();
+
+    // App Check
+    if (msg.contains('app check') || msg.contains('appcheck')) {
+      if (msg.contains('missing') ||
+          msg.contains('invalid') ||
+          msg.contains('token')) {
+        return 'App Check no autorizado en este dispositivo (dev). '
+            'Agrega el Debug Secret que aparece en la consola a Firebase → App Check.';
+      }
+    }
+
+    // Cloud Functions: intenta dar un mensaje más útil
+    if (msg.contains('firebase_functions')) {
+      if (msg.contains('cloudinary')) {
+        return 'No se pudo limpiar imágenes antiguas en Cloudinary (best-effort).';
+      }
+      return 'Ocurrió un problema al ejecutar una función del servidor.';
+    }
+
+    // Firestore
+    if (error is FirebaseException && error.plugin == 'cloud_firestore') {
+      switch (error.code) {
+        case 'permission-denied':
+          return 'Permiso denegado al guardar. Revisa reglas o App Check.';
+        case 'unavailable':
+          return 'Servicio temporalmente no disponible. Intenta de nuevo.';
+        case 'deadline-exceeded':
+        case 'cancelled':
+          return 'La operación tardó demasiado. Intenta nuevamente.';
+      }
+    }
+
+    if (msg.contains('failed host lookup') ||
+        msg.contains('socket') ||
+        msg.contains('network')) {
+      return 'Sin conexión o red inestable. Verifica tu internet.';
+    }
+
+    return generic;
+  }
+}
+
+----------- END FILE: modules/core/utils/errors/firebase_errors.dart -----------
+
+Dentro de /input:
+
+------------- FILE: modules/core/utils/input/input_formatters.dart -------------
+// lib/modules/core/utils/input_formatters.dart
+import 'package:flutter/services.dart';
+
+/// Fuerza mayúsculas conservando la posición del cursor.
+class UpperCaseTextFormatter extends TextInputFormatter {
+  const UpperCaseTextFormatter();
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final upper = newValue.text.toUpperCase();
+    return newValue.copyWith(
+      text: upper,
+      selection: TextSelection.collapsed(offset: upper.length),
+      composing: TextRange.empty,
+    );
+  }
+}
+
+/// Solo letras (con acentos), espacios, guiones y apóstrofes.
+/// Útil para nombres/apellidos. No cambia mayúsculas/minúsculas.
+class LettersOnlyTextFormatter extends TextInputFormatter {
+  static final _re = RegExp(r"[A-Za-zÀ-ÿÑñ' -]");
+  const LettersOnlyTextFormatter();
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final filtered =
+        newValue.text.split('').where((c) => _re.hasMatch(c)).join();
+    if (filtered == newValue.text) return newValue;
+
+    final diff = newValue.text.length - filtered.length;
+    final newOffset = (newValue.selection.baseOffset - diff).clamp(
+      0,
+      filtered.length,
+    );
+
+    return TextEditingValue(
+      text: filtered,
+      selection: TextSelection.collapsed(offset: newOffset),
+      composing: TextRange.empty,
+    );
+  }
+}
+
+/// Letras, números, espacios y símbolos típicos de dirección: # . , ' ° -
+/// Útil para una sola línea de dirección.
+class AddressTextFormatter extends TextInputFormatter {
+  static final _re = RegExp(r"[A-Za-zÀ-ÿÑñ0-9#\.\,'°\- ]");
+  const AddressTextFormatter();
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final filtered =
+        newValue.text.split('').where((c) => _re.hasMatch(c)).join();
+    if (filtered == newValue.text) return newValue;
+
+    final diff = newValue.text.length - filtered.length;
+    final offset = (newValue.selection.baseOffset - diff).clamp(
+      0,
+      filtered.length,
+    );
+
+    return TextEditingValue(
+      text: filtered,
+      selection: TextSelection.collapsed(offset: offset),
+      composing: TextRange.empty,
+    );
+  }
+}
+
+/// EC móvil (campo local, sin +593):
+/// - Si empieza con '0' ⇒ obliga '09' y máx 10 dígitos (09xxxxxxxx).
+/// - Si NO empieza con '0' ⇒ debe empezar con '9' y máx 9 dígitos (9xxxxxxxx).
+/// - Rechaza cualquier intento de violar el patrón devolviendo oldValue.
+///
+/// Pensado para usarse junto a un prefijo visual "(+593)".
+class EcPhoneLocalDigitsFormatter extends TextInputFormatter {
+  const EcPhoneLocalDigitsFormatter();
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    // Deja solo dígitos
+    final digits = newValue.text.replaceAll(RegExp(r'\D'), '');
+
+    // Vacío permitido (borrar)
+    if (digits.isEmpty) {
+      return const TextEditingValue(
+        text: '',
+        selection: TextSelection.collapsed(offset: 0),
+        composing: TextRange.empty,
+      );
+    }
+
+    // Primer dígito debe ser 0 o 9
+    final first = digits[0];
+    if (first != '0' && first != '9') {
+      return oldValue; // rechazo: no empieza en 0 ni 9
+    }
+
+    String out;
+    if (first == '0') {
+      // Si hay segundo dígito, debe ser 9
+      if (digits.length >= 2 && digits[1] != '9') {
+        return oldValue; // rechazo: 0 seguido de algo distinto a 9
+      }
+      // 09 + 8 dígitos = 10 en total
+      out = digits.substring(0, digits.length.clamp(0, 10));
+    } else {
+      // Empieza con 9, solo 9 dígitos totales
+      out = digits.substring(0, digits.length.clamp(0, 9));
+    }
+
+    return TextEditingValue(
+      text: out,
+      selection: TextSelection.collapsed(offset: out.length),
+      composing: TextRange.empty,
+    );
+  }
+}
+
+----------- END FILE: modules/core/utils/input/input_formatters.dart -----------
+
+----------------- FILE: modules/core/utils/input/keyboard.dart -----------------
+// lib/modules/core/utils/keyboard.dart
+import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
+
+/// Cierra el teclado de forma silenciosa (sin SystemChannels).
+/// Pequeño delay (≈1 frame) para que el IME procese el unfocus antes de navegar.
+Future<void> hideKeyboard(BuildContext context) async {
+  try {
+    FocusManager.instance.primaryFocus?.unfocus();
+  } catch (_) {}
+  await Future<void>.delayed(const Duration(milliseconds: 16));
+  try {
+    await SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
+  } catch (_) {}
+}
+
+--------------- END FILE: modules/core/utils/input/keyboard.dart ---------------
+
+Dentro de /navigation:
+
+------------ FILE: modules/core/utils/navigation/back_navigator.dart -----------
+// lib/modules/core/utils/back_navigator.dart
+import 'package:flutter/widgets.dart';
+import '../input/keyboard.dart';
+
+/// Devuelve true si se interceptó y NO se hizo pop
+typedef BackIntercept = bool Function();
+
+/// Pequeña compuerta para evitar reentradas (tap + PopScope, etc.)
+class _BackGate {
+  static bool _busy = false;
+  static bool get busy => _busy;
+  static void open() => _busy = false;
+  static void close() => _busy = true;
+}
+
+/// Maneja el botón atrás.
+///
+/// - useMaybePop=false: POP determinista (no llama a PopScope).
+/// - useMaybePop=true : Camino clásico (consulta PopScope/maybePop).
+/// - forceToRoute=true + popToRoute: limpia la pila y navega directo a esa ruta.
+Future<void> handleBack(
+  BuildContext context, {
+  BackIntercept? intercept,
+  String? popToRoute, // p.ej. '/auth/welcome'
+  bool useMaybePop = true,
+  bool forceToRoute = false,
+}) async {
+  if (_BackGate.busy) return; // evita doble ejecución en el mismo frame
+  _BackGate.close();
+
+  // ⚠️ Capturamos Navigator ANTES del await
+  final nav = Navigator.of(context);
+
+  try {
+    await hideKeyboard(context);
+
+    // Intercepción (p. ej., paso 2 -> paso 1 en registro)
+    if (intercept != null && intercept()) return;
+
+    // 👉 modo "hard": limpiar pila y llevar a la ruta indicada
+    if (popToRoute != null && forceToRoute) {
+      if (nav.mounted) {
+        nav.pushNamedAndRemoveUntil(popToRoute, (_) => false);
+      }
+      return;
+    }
+
+    if (useMaybePop) {
+      final didPop = await nav.maybePop();
+      if (!didPop && popToRoute != null && nav.mounted) {
+        nav.pushNamedAndRemoveUntil(popToRoute, (_) => false);
+      }
+    } else {
+      if (nav.canPop()) {
+        nav.pop();
+      } else if (popToRoute != null && nav.mounted) {
+        nav.pushNamedAndRemoveUntil(popToRoute, (_) => false);
+      }
+    }
+  } finally {
+    // Reabrimos la compuerta al final del microtask/frame.
+    Future<void>.delayed(const Duration(milliseconds: 1), _BackGate.open);
+  }
+}
+
+---------- END FILE: modules/core/utils/navigation/back_navigator.dart ---------
+
+--------------- FILE: modules/core/utils/navigation/minimize.dart --------------
+import 'dart:io' show Platform;
+import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart'; // para debugPrint
+
+class AppMinimize {
+  static const _channel = MethodChannel('app/native');
+
+  static Future<bool> toBackground() async {
+    if (!Platform.isAndroid) return false;
+    try {
+      final ok = await _channel.invokeMethod<bool>('moveTaskToBack');
+      return ok == true;
+    } catch (e) {
+      debugPrint('toBackground error: $e');
+      return false;
+    }
+  }
+
+  static Future<bool> exitApp() async {
+    if (!Platform.isAndroid) return false;
+    try {
+      final ok = await _channel.invokeMethod<bool>('finishApp');
+      if (ok == true) return true;
+    } catch (e) {
+      debugPrint('exitApp error: $e');
+    }
+    // 🔁 Fallback duro si el canal fallara por cualquier motivo
+    try {
+      await SystemNavigator.pop(); // cierra el engine en Android
+      return true;
+    } catch (e) {
+      debugPrint('SystemNavigator.pop error: $e');
+      return false;
+    }
+  }
+}
+
+------------- END FILE: modules/core/utils/navigation/minimize.dart ------------
+
+------------- FILE: modules/core/utils/navigation/online_guard.dart ------------
+// lib/modules/core/utils/online_guard.dart
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../blocs/net_signal_cubit.dart';
+
+/// Protege una operación async que requiere Internet.
+/// Si no hay red, o si la op falla, abre un BottomSheet con “Reintentar”.
+Future<T?> guardOnline<T>(BuildContext context, Future<T> Function() op) async {
+  final net = context.read<NetSignalCubit>();
+  if (!net.isOnline) {
+    _showRetrySheet(context);
+    return null;
+  }
+  try {
+    return await op();
+  } catch (_) {
+    _showRetrySheet(context);
+    return null;
+  }
+}
+
+void _showRetrySheet(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    isDismissible: true,
+    builder:
+        (_) => Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Tuvimos un problema y lo estamos resolviendo.\n'
+                'Vuelve a intentar en unos momentos.',
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              FilledButton(
+                onPressed: () async {
+                  // ⚠️ Capturamos referencias ANTES del await
+                  final cubit = context.read<NetSignalCubit>();
+                  final nav = Navigator.of(context);
+
+                  await cubit.forceRefresh();
+                  final netOk = cubit.isOnline;
+                  if (!netOk) return;
+                  if (!nav.mounted) return;
+
+                  nav.pop(); // cierra el sheet
+                },
+                child: const Text('Reintentar'),
+              ),
+            ],
+          ),
+        ),
+  );
+}
+
+----------- END FILE: modules/core/utils/navigation/online_guard.dart ----------
+
+Dentro de /validation:
+
+----------- FILE: modules/core/utils/validation/phone_normalizer.dart ----------
+// lib/modules/core/utils/phone_normalizer.dart
+/// Normalizador estricto para móviles de Ecuador (E.164).
+/// Admite entradas como:
+/// - 967167547
+/// - 0967167547
+/// - +593967167547
+/// - 593967167547
+/// - 5930967167547 (con 0 tras el país)  -> normaliza a +593967167547
+/// - 00 593 9 6716 7547                   -> +593967167547
+///
+/// Criterios:
+/// - Solo móviles que inician en 9 y tengan 9 dígitos de línea.
+class PhoneNormalizerEC {
+  /// Limpia espacios y separadores dejando solo dígitos y el '+' inicial.
+  static String _strip(String raw) {
+    String s = (raw).trim();
+    // deja '+' solo si está al inicio; el resto lo elimina
+    s = s.replaceAll(RegExp(r'(?!^)\+'), '');
+    // elimina todo salvo dígitos y '+'
+    s = s.replaceAll(RegExp(r'[^\d\+]'), '');
+    return s;
+  }
+
+  /// Devuelve E.164 o null si no es móvil plausible de Ecuador.
+  static String? toE164(String raw) {
+    var s = _strip(raw);
+    if (s.isEmpty) return null;
+
+    // 00 -> +
+    if (s.startsWith('00')) s = '+${s.substring(2)}';
+
+    // Caso +... primero
+    if (s.startsWith('+')) {
+      // +59309XXXXXXXX -> quitar el 0 tras el país
+      if (RegExp(r'^\+5930?9\d{8}$').hasMatch(s)) {
+        return '+593${s.substring(s.indexOf('9'))}';
+      }
+      // +5939XXXXXXXX válido
+      if (RegExp(r'^\+5939\d{8}$').hasMatch(s)) return s;
+
+      // Otros +... no válidos (solo aceptamos móviles 9XXXXXXXX)
+      return null;
+    }
+
+    // Sin '+':
+    // 59309XXXXXXXX -> quitar el 0 tras el país
+    if (RegExp(r'^5930?9\d{8}$').hasMatch(s)) {
+      return '+593${s.substring(s.indexOf('9'))}';
+    }
+
+    // 09XXXXXXXX o 9XXXXXXXX
+    if (RegExp(r'^0?9\d{8}$').hasMatch(s)) {
+      final line = s.startsWith('0') ? s.substring(1) : s;
+      return '+593$line';
+    }
+
+    // Cualquier otra forma es inválida para móvil EC
+    return null;
+  }
+
+  /// ¿Se puede normalizar a un móvil EC válido?
+  static bool isPlausibleMobile(String raw) => toE164(raw) != null;
+}
+
+--------- END FILE: modules/core/utils/validation/phone_normalizer.dart --------
+
+-------------- FILE: modules/core/utils/validation/validators.dart -------------
+// lib/modules/core/utils/validators.dart
+import 'package:email_validator/email_validator.dart';
+import 'package:ec_validations/ec_validations.dart';
+import 'phone_normalizer.dart';
+
+/// Dominio usado para cuentas creadas con documento (@fakeemail.com).
+const String fakeEmailDomain = 'fakeemail.com';
+
+bool isFakeEmail(String? email) {
+  final value = email?.trim().toLowerCase();
+  if (value == null || value.isEmpty) return false;
+  return value.endsWith('@$fakeEmailDomain');
+}
+
+bool requiresEmailVerification(String? email) {
+  if (email == null || email.isEmpty) return false;
+  return !isFakeEmail(email);
+}
+
+class AppValidators {
+  /// Email con email_validator 3.x
+  static String? email(String? value) {
+    final s = (value ?? '').trim();
+    if (s.isEmpty) return 'Ingresa tu correo';
+    return EmailValidator.validate(s) ? null : 'Correo no válido';
+  }
+
+  /// Validación estricta de CÉDULA (10 dígitos)
+  static String? ecCedula(String? value) {
+    final s = (value ?? '').trim();
+    if (s.isEmpty) return 'Ingresa tu cédula';
+    if (!RegExp(r'^\d{10}$').hasMatch(s)) {
+      return 'La cédula debe tener 10 dígitos';
+    }
+    try {
+      final res = DniValidator.isValid(s);
+      return res.isValid ? null : 'Cédula inválida';
+    } catch (_) {
+      return 'Cédula inválida';
+    }
+  }
+
+  /// Validación de RUC (13 dígitos)
+  static String? ecRuc(String? value) {
+    final s = (value ?? '').trim();
+    if (s.isEmpty) return 'Ingresa tu RUC';
+    if (!RegExp(r'^\d{13}$').hasMatch(s)) return 'El RUC debe tener 13 dígitos';
+    try {
+      final res = RucValidator.validateRuc(s);
+      return res.isValid ? null : 'RUC inválido';
+    } catch (_) {
+      return 'RUC inválido';
+    }
+  }
+
+  /// Validación de PASAPORTE (alfa-numérico 6-12, mayúsculas)
+  static String? passport(String? value) {
+    final s = (value ?? '').trim().toUpperCase();
+    if (s.isEmpty) return 'Ingresa tu pasaporte';
+    if (!RegExp(r'^[A-Z0-9]{6,12}$').hasMatch(s)) {
+      return 'Pasaporte inválido (6 a 12 caracteres A-Z/0-9)';
+    }
+    return null;
+  }
+
+  /// Fallback: intenta cédula, RUC y luego pasaporte (6–12 A-Z/0–9)
+  static String? ecDocument(String? value) {
+    final s = (value ?? '').trim().toUpperCase();
+    if (s.isEmpty) return 'Ingresa tu documento';
+
+    try {
+      final dni = DniValidator.isValid(s);
+      if (dni.isValid) return null;
+    } catch (_) {}
+
+    try {
+      final ruc = RucValidator.validateRuc(s);
+      if (ruc.isValid) return null;
+    } catch (_) {}
+
+    final passportOk = RegExp(r'^[A-Z0-9]{6,12}$').hasMatch(s);
+    if (passportOk) return null;
+
+    return 'Documento inválido. Usa cédula, RUC o pasaporte válido.';
+  }
+
+  /// Nombre de persona: letras (con acentos), espacios, guiones, apóstrofes. 2..60
+  static String? personName(String? value, {int min = 2, int max = 60}) {
+    final s = (value ?? '').trim();
+    if (s.isEmpty) return 'Ingresa tu nombre';
+    if (s.length < min) return 'El nombre es muy corto';
+    if (s.length > max) return 'El nombre es muy largo';
+    final ok = RegExp(r"^[A-Za-zÀ-ÿÑñ' -]+$").hasMatch(s);
+    return ok ? null : 'Solo letras, espacios, guiones y apóstrofes';
+    // (Si quieres, agrega validación de “al menos 1 letra” por palabra)
+  }
+
+  /// Dirección 1 línea: letras, números y # . , ' ° - + espacios. 5..120
+  static String? addressLine(String? value, {int min = 5, int max = 120}) {
+    final s = (value ?? '').trim();
+    if (s.isEmpty) return 'Ingresa tu dirección';
+    if (s.length < min) return 'La dirección es muy corta';
+    if (s.length > max) return 'La dirección es muy larga';
+    final ok = RegExp(r"^[A-Za-zÀ-ÿÑñ0-9#\.\,'°\- ]+$").hasMatch(s);
+    return ok ? null : 'Caracteres inválidos en la dirección';
+  }
+
+  /// Celular Ecuador (admite 9xxxxxxxx o 09xxxxxxxx o 593/ +593…)
+  static String? ecMobilePhone(String? value) {
+    final s = (value ?? '').trim();
+    if (s.isEmpty) return 'Ingresa tu teléfono';
+    return PhoneNormalizerEC.toE164(s) != null
+        ? null
+        : 'Teléfono inválido (ej. 09xxxxxxxx, +5939xxxxxxxx o 5939xxxxxxxx)';
+  }
+}
+
+------------ END FILE: modules/core/utils/validation/validators.dart -----------
+
+Dentro de /widgets:
+
+------------- FILE: modules/core/widgets/appcheck_status_badge.dart ------------
+// lib/modules/core/widgets/appcheck_status_badge.dart
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
+import '../../core/config/feature_flags.dart' as ff;
+
+class AppCheckStatusBadge extends StatefulWidget {
+  const AppCheckStatusBadge({super.key});
+
+  @override
+  State<AppCheckStatusBadge> createState() => _AppCheckStatusBadgeState();
+}
+
+class _AppCheckStatusBadgeState extends State<AppCheckStatusBadge> {
+  String _label = 'App Check: comprobando…';
+  Color _bg = Colors.orange;
+  bool _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // En release o si está deshabilitado, no renderizar ni hacer llamadas.
+    if (kReleaseMode || !ff.FeatureFlags.appCheckBadgeEnabled) return;
+
+    // SÓLO UNA CONSULTA al inicio.
+    _probe(forceRefresh: false);
+  }
+
+  Future<void> _probe({required bool forceRefresh}) async {
+    setState(() {
+      _loading = true;
+      _label = 'App Check: comprobando…';
+      _bg = Colors.orange;
+    });
+
+    try {
+      // Nota: forceRefresh=true hace un reintento duro (puede topar rate limits).
+      final t = await FirebaseAppCheck.instance.getToken(forceRefresh);
+
+      if (!mounted) return;
+      if (t == null || t.isEmpty) {
+        setState(() {
+          _label = 'App Check: sin token';
+          _bg = Colors.red;
+          _loading = false;
+        });
+      } else {
+        setState(() {
+          _label = 'App Check: OK';
+          _bg = Colors.green;
+          _loading = false;
+        });
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _label = 'App Check: sin autorización';
+        _bg = Colors.red;
+        _loading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Auto-ocultar si no aplica
+    if (kReleaseMode || !ff.FeatureFlags.appCheckBadgeEnabled) {
+      return const SizedBox.shrink();
+    }
+
+    // Toca para re-consultar. Mantén presionado para forzar refresh.
+    return SafeArea(
+      bottom: false,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 48.0),
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(8),
+              onTap: _loading ? null : () => _probe(forceRefresh: false),
+              onLongPress:
+                  _loading
+                      ? null
+                      : () => _probe(forceRefresh: true), // opcional (duro)
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: _bg.withValues(alpha: .92),
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: const [
+                    BoxShadow(
+                      blurRadius: 8,
+                      color: Color(0x33000000),
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (_loading)
+                      const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
+                        ),
+                      )
+                    else
+                      const Icon(
+                        Icons.verified_user,
+                        size: 16,
+                        color: Colors.white,
+                      ),
+                    const SizedBox(width: 8),
+                    Text(
+                      _label,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        decoration: TextDecoration.none,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(
+                      _loading
+                          ? Icons.hourglass_top_rounded
+                          : Icons.refresh_rounded,
+                      size: 16,
+                      color: Colors.white,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+----------- END FILE: modules/core/widgets/appcheck_status_badge.dart ----------
+
+---------------- FILE: modules/core/widgets/settings_dialog.dart ---------------
+// modules/core/widgets/settings_dialog.dart
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../blocs/settings_cubit.dart';
+
+class SettingsButton extends StatelessWidget {
+  const SettingsButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.settings, color: Colors.white),
+      onPressed: () {
+        showDialog(
+          context: context,
+          builder: (_) => const SettingsDialog(),
+        );
+      },
+    );
+  }
+}
+
+class SettingsDialog extends StatelessWidget {
+  const SettingsDialog({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Configuración de Accesibilidad'),
+      content: SingleChildScrollView(
+        child: BlocBuilder<SettingsCubit, SettingsState>(
+          builder: (context, state) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Vista previa:', style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                Text(
+                  '100 MUJERES TRABAJANDO',
+                  style: TextStyle(fontSize: 18 * state.textScaleFactor.clamp(0.8, 1.2)),
+                ),
+                const SizedBox(height: 16),
+                const Text('Tamaño de texto'),
+                Slider(
+                  value: state.textScaleFactor,
+                  min: 0.8,
+                  max: 1.2,
+                  divisions: 4,
+                  label: state.textScaleFactor.toStringAsFixed(1),
+                  onChanged: (value) {
+                    context.read<SettingsCubit>().setScaleFactor(value);
+                  },
+                ),
+                const SizedBox(height: 16),
+                const Text('Tema de la App'),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.light_mode),
+                      onPressed: () => context.read<SettingsCubit>().setThemeMode(AppThemeMode.light),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.dark_mode),
+                      onPressed: () => context.read<SettingsCubit>().setThemeMode(AppThemeMode.dark),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.brightness_auto),
+                      onPressed: () => context.read<SettingsCubit>().setThemeMode(AppThemeMode.system),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cerrar'),
+        ),
+      ],
+    );
+  }
+}
+
+-------------- END FILE: modules/core/widgets/settings_dialog.dart -------------
+
+Dentro de /actions_buttons:
+
+------- FILE: modules/core/widgets/actions_buttons/next_step_button.dart -------
+import 'package:flutter/material.dart';
+import '../../config/app_theme.dart';
+
+class NextStepButton extends StatelessWidget {
+  final String text;
+  final VoidCallback? onPressed;
+
+  const NextStepButton({
+    super.key,
+    required this.text,
+    this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isDisabled = onPressed == null;
+
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: isDisabled ? Colors.grey.shade400 : AppTheme.blue,
+          foregroundColor: AppTheme.white,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(32),
+          ),
+        ),
+        child: Text(
+          text,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+      ),
+    );
+  }
+}
+
+----- END FILE: modules/core/widgets/actions_buttons/next_step_button.dart -----
+
+-------- FILE: modules/core/widgets/actions_buttons/primary_button.dart --------
+// lib/modules/core/widgets/primary_button.dart
+import 'package:flutter/material.dart';
+import '../../config/app_theme.dart';
+import '../../utils/input/keyboard.dart'; // ⬅️ para hideKeyboard
+
+enum PrimaryButtonVariant {
+  /// Estilo ANTERIOR (compatibilidad): pill grande, azul.
+  legacy,
+
+  /// Estilo "modern": pill 32, azul AppTheme.blue, texto blanco, padding 16, bold.
+  modern,
+}
+
+class PrimaryButton extends StatelessWidget {
+  final String text;
+  final VoidCallback? onPressed;
+  final PrimaryButtonVariant variant;
+  final bool fullWidth;
+  final bool isLoading;
+  final Widget? leading;
+
+  const PrimaryButton({
+    super.key,
+    required this.text,
+    this.onPressed,
+    this.variant = PrimaryButtonVariant.legacy,
+    this.fullWidth = true,
+    this.isLoading = false,
+    this.leading,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isDisabled = onPressed == null || isLoading;
+
+    final ButtonStyle style = switch (variant) {
+      PrimaryButtonVariant.legacy => ElevatedButton.styleFrom(
+        backgroundColor: isDisabled ? Colors.grey.shade400 : AppTheme.blue,
+        foregroundColor: AppTheme.white,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+        textStyle: const TextStyle(fontWeight: FontWeight.bold),
+      ),
+      PrimaryButtonVariant.modern => ElevatedButton.styleFrom(
+        backgroundColor: isDisabled ? Colors.grey.shade400 : AppTheme.blue,
+        foregroundColor: AppTheme.white,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+        textStyle: const TextStyle(fontWeight: FontWeight.bold),
+      ),
+    };
+
+    Widget child;
+    if (isLoading) {
+      child = const SizedBox(
+        height: 20,
+        width: 20,
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+        ),
+      );
+    } else {
+      child = Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (leading != null) ...[leading!, const SizedBox(width: 8)],
+          FittedBox(child: Text(text)),
+        ],
+      );
+    }
+
+    return SizedBox(
+      width: fullWidth ? double.infinity : null,
+      child: ElevatedButton(
+        style: style,
+        onPressed:
+            isDisabled
+                ? null
+                : () async {
+                  // 👇 Siempre cierra teclado antes de ejecutar la acción
+                  await hideKeyboard(context);
+                  onPressed?.call();
+                },
+        child: child,
+      ),
+    );
+  }
+}
+
+------ END FILE: modules/core/widgets/actions_buttons/primary_button.dart ------
+
+Dentro de /dialogs:
+
+------- FILE: modules/core/widgets/dialogs/success_countdown_dialog.dart -------
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+
+/// Muestra un modal de confirmación con cuenta regresiva.
+/// Reutilizable para categorías, productos, etc.
+Future<void> showSuccessCountdownDialog(
+  BuildContext context, {
+  required String title,
+  required String message,
+  Duration duration = const Duration(seconds: 5),
+  String buttonText = 'Continuar',
+  VoidCallback? onFinished,
+}) async {
+  final totalSeconds = duration.inSeconds;
+  final remaining = ValueNotifier<int>(totalSeconds);
+  Timer? timer;
+
+  void closeAndFinish() {
+    timer?.cancel();
+    Navigator.of(context, rootNavigator: true).pop();
+    if (onFinished != null) {
+      Future.microtask(onFinished);
+    }
+  }
+
+  timer = Timer.periodic(const Duration(seconds: 1), (t) {
+    final next = remaining.value - 1;
+    if (next <= 0) {
+      closeAndFinish();
+    } else {
+      remaining.value = next;
+    }
+  });
+
+  await showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (ctx) {
+      return PopScope(
+        canPop: false,
+        child: AlertDialog(
+          title: Text(title),
+          content: ValueListenableBuilder<int>(
+            valueListenable: remaining,
+            builder: (_, value, _) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(message),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Continuando en $value s...',
+                    style: Theme.of(ctx).textTheme.bodySmall,
+                  ),
+                ],
+              );
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: closeAndFinish,
+              child: Text(buttonText),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+
+  timer.cancel();
+  remaining.dispose();
+}
+
+----- END FILE: modules/core/widgets/dialogs/success_countdown_dialog.dart -----
+
+Dentro de /feedback:
+
+----------- FILE: modules/core/widgets/feedback/blocking_loader.dart -----------
+// modules/core/widgets/blocking_loader.dart
+import 'package:flutter/material.dart';
+
+class BlockingLoader extends StatelessWidget {
+  const BlockingLoader({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return AbsorbPointer(
+      absorbing: true,
+      child: Container(
+        color: Colors.black.withValues(alpha: .25),
+        alignment: Alignment.center,
+        child: const Card(
+          elevation: 4,
+          child: Padding(
+            padding: EdgeInsets.all(20),
+            child: SizedBox(
+              width: 56,
+              height: 56,
+              child: CircularProgressIndicator.adaptive(),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+--------- END FILE: modules/core/widgets/feedback/blocking_loader.dart ---------
+
+------------- FILE: modules/core/widgets/feedback/empty_state.dart -------------
+
+----------- END FILE: modules/core/widgets/feedback/empty_state.dart -----------
+
+------------- FILE: modules/core/widgets/feedback/error_retry.dart -------------
+
+----------- END FILE: modules/core/widgets/feedback/error_retry.dart -----------
+
+----------- FILE: modules/core/widgets/feedback/problem_content.dart -----------
+import 'package:flutter/material.dart';
+
+/// Contenido reusable de la UI de “problema” (red/servidor).
+/// Úsalo en pantallas completas (ProblemScreen) o inline (ProblemInline).
+class ProblemContent extends StatelessWidget {
+  final String? message;
+  final Color primaryColor;
+  final VoidCallback onRetry;
+  final VoidCallback onGoHome;
+
+  const ProblemContent({
+    super.key,
+    required this.primaryColor,
+    required this.onRetry,
+    required this.onGoHome,
+    this.message,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final text = message ??
+        'No pudimos cargar el contenido.\n'
+        'Revisa tu conexión e inténtalo nuevamente.';
+
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.wifi_off_rounded, size: 56, color: primaryColor),
+            const SizedBox(height: 12),
+            Text(
+              text,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: onRetry,
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: const Text('Reintentar'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: onGoHome,
+                    icon: const Icon(Icons.home_rounded),
+                    label: const Text('Ir al inicio'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+--------- END FILE: modules/core/widgets/feedback/problem_content.dart ---------
+
+------------ FILE: modules/core/widgets/feedback/problem_inline.dart -----------
+import 'package:flutter/material.dart';
+import 'problem_content.dart';
+
+/// Versión embebible del contenido de problema para usar dentro de un tab/home.
+/// No crea Scaffold ni tapa la bottom bar.
+class ProblemInline extends StatelessWidget {
+  final String? message;
+  final VoidCallback? onRetry;
+  final VoidCallback? onGoHome;
+
+  const ProblemInline({super.key, this.message, this.onRetry, this.onGoHome});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return ProblemContent(
+      message: message,
+      primaryColor: cs.error,
+      onRetry: onRetry ?? () {},
+      onGoHome: onGoHome ?? () {},
+    );
+  }
+}
+
+---------- END FILE: modules/core/widgets/feedback/problem_inline.dart ---------
+
+------------ FILE: modules/core/widgets/feedback/problem_screen.dart -----------
+// lib/modules/core/widgets/problem_screen.dart
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../blocs/net_signal_cubit.dart';
+import 'problem_content.dart';
+
+/// Pantalla de error reusable para problemas de red/servidor.
+/// - [Reintentar] fuerza un refresh de conectividad.
+/// - [Ir al inicio] navega al home sin tapar la barra inferior si se usa Inline.
+class ProblemScreen extends StatelessWidget {
+  final String? message;
+  final VoidCallback? onGoHome;
+
+  const ProblemScreen({super.key, this.message, this.onGoHome});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Tenemos un problema')),
+      body: SafeArea(
+        child: Center(
+          child: ProblemContent(
+            message: message,
+            primaryColor: cs.error,
+            onRetry: () async {
+              final cubit = context.read<NetSignalCubit>();
+              final nav = Navigator.of(context); // evita usar context tras await
+              await cubit.forceRefresh();
+              if (nav.mounted && nav.canPop()) {
+                nav.maybePop();
+              }
+            },
+            onGoHome: onGoHome ??
+                () {
+                  Navigator.of(context).popUntil((r) => r.isFirst);
+                },
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+---------- END FILE: modules/core/widgets/feedback/problem_screen.dart ---------
+
+------------ FILE: modules/core/widgets/feedback/step_indicator.dart -----------
+// modules/core/widgets/step_indicator.dart
+import 'package:flutter/material.dart';
+
+class StepIndicator extends StatelessWidget {
+  final int currentStep;
+  final int totalSteps;
+
+  const StepIndicator({
+    super.key,
+    required this.currentStep,
+    required this.totalSteps,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: List.generate(totalSteps, (index) {
+        final isActive = index < currentStep;
+        return Expanded(
+          child: Container(
+            height: 4,
+            margin: const EdgeInsets.symmetric(horizontal: 2),
+            decoration: BoxDecoration(
+              color: isActive ? Colors.blue : Colors.white.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+        );
+      }),
+    );
+  }
+}
+
+---------- END FILE: modules/core/widgets/feedback/step_indicator.dart ---------
+
+Dentro de /images:
+
+----------- FILE: modules/core/widgets/images/safe_network_image.dart ----------
+// lib/modules/core/widgets/images/safe_network_image.dart
+import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+
+/// Imagen de red con placeholder y fallback para errores (404, timeouts, etc.).
+class SafeNetworkImage extends StatelessWidget {
+  final String url;
+  final double? width;
+  final double? height;
+  final BoxFit fit;
+  final AlignmentGeometry alignment;
+  final BorderRadius? borderRadius;
+  final Widget? placeholder;
+  final Widget? fallback;
+  final Duration fadeInDuration;
+  final Duration fadeOutDuration;
+
+  const SafeNetworkImage({
+    super.key,
+    required this.url,
+    this.width,
+    this.height,
+    this.fit = BoxFit.cover,
+    this.alignment = Alignment.center,
+    this.borderRadius,
+    this.placeholder,
+    this.fallback,
+    this.fadeInDuration = const Duration(milliseconds: 180),
+    this.fadeOutDuration = const Duration(milliseconds: 120),
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // alignment es AlignmentGeometry; lo resolvemos a Alignment
+    final resolvedAlignment = alignment.resolve(Directionality.of(context));
+
+    final img = CachedNetworkImage(
+      imageUrl: url,
+      width: width,
+      height: height,
+      fit: fit,
+      alignment: resolvedAlignment,
+      fadeInDuration: fadeInDuration,
+      fadeOutDuration: fadeOutDuration,
+      // Parámetros no usados → usa '_' solo una vez
+      placeholder:
+          (context, _) =>
+              placeholder ??
+              Container(
+                width: width,
+                height: height,
+                color: Colors.grey.shade200,
+              ),
+      // Evita nombres locales con '_' inicial; no necesitamos usarlos
+      errorWidget:
+          (context, imageUrl, error) =>
+              fallback ??
+              Container(
+                width: width,
+                height: height,
+                color: Colors.grey.shade200,
+                alignment: Alignment.center,
+                child: const Icon(Icons.image_not_supported_rounded, size: 22),
+              ),
+      // Reducimos uso de memoria si hay medidas conocidas
+      memCacheWidth: width != null ? (width! * 2).round() : null,
+      memCacheHeight: height != null ? (height! * 2).round() : null,
+    );
+
+    if (borderRadius != null) {
+      return ClipRRect(borderRadius: borderRadius!, child: img);
+    }
+    return img;
+  }
+}
+
+/// Avatar redondo tolerante a errores / URL vacía.
+class SafeAvatar extends StatelessWidget {
+  final String? url;
+  final double size;
+  final IconData fallbackIcon;
+  final Color? backgroundColor;
+  final Color? iconColor;
+
+  const SafeAvatar({
+    super.key,
+    required this.url,
+    this.size = 36,
+    this.fallbackIcon = Icons.person,
+    this.backgroundColor,
+    this.iconColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final bg = backgroundColor ?? Colors.grey.shade300;
+    final ic = iconColor ?? Colors.black54;
+
+    final Widget fallback = Container(
+      color: bg,
+      child: Icon(fallbackIcon, color: ic, size: size * 0.56),
+    );
+
+    Widget child;
+    if (url != null && url!.trim().isNotEmpty) {
+      child = SafeNetworkImage(
+        url: url!.trim(),
+        fit: BoxFit.cover,
+        fallback: fallback,
+        placeholder: Container(color: bg),
+      );
+    } else {
+      child = fallback;
+    }
+
+    return ClipOval(child: SizedBox(width: size, height: size, child: child));
+  }
+}
+
+--------- END FILE: modules/core/widgets/images/safe_network_image.dart --------
+
+Dentro de /inputs:
+
+-------- FILE: modules/core/widgets/inputs/accept_privacy_checkbox.dart --------
+// lib/modules/core/widgets/accept_privacy_checkbox.dart
+
+import 'package:flutter/material.dart';
+
+class AcceptPrivacyCheckbox extends StatelessWidget {
+  final bool accepted;
+  final ValueChanged<bool?> onChanged;
+
+  const AcceptPrivacyCheckbox({
+    super.key,
+    required this.accepted,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Checkbox(value: accepted, onChanged: onChanged),
+        const Expanded(
+          child: Text(
+            'Acepto la Política de Privacidad',
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+------ END FILE: modules/core/widgets/inputs/accept_privacy_checkbox.dart ------
+
+------------- FILE: modules/core/widgets/inputs/address_field.dart -------------
+// lib/modules/core/widgets/inputs/address_field.dart
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import '../../utils/input/input_formatters.dart';
+
+class AddressField extends StatelessWidget {
+  final TextEditingController controller;
+  final FocusNode? focusNode;
+  final String label;
+  final String? errorText;
+  final TextInputAction textInputAction;
+  final void Function(String)? onChanged;
+  final int maxLength;
+
+  const AddressField({
+    super.key,
+    required this.controller,
+    this.focusNode,
+    this.label = 'Dirección',
+    this.errorText,
+    this.textInputAction = TextInputAction.next,
+    this.onChanged,
+    this.maxLength = 120,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // ⚠️ Growable
+    final formatters = <TextInputFormatter>[
+      const AddressTextFormatter(),
+      LengthLimitingTextInputFormatter(maxLength),
+    ];
+
+    return TextField(
+      controller: controller,
+      focusNode: focusNode,
+      textCapitalization: TextCapitalization.sentences,
+      keyboardType: TextInputType.streetAddress,
+      autofillHints: const [AutofillHints.streetAddressLine1],
+      textInputAction: textInputAction,
+      inputFormatters: List<TextInputFormatter>.of(formatters),
+      decoration: InputDecoration(
+        labelText: label,
+        errorText: errorText,
+        border: const OutlineInputBorder(),
+        isDense: true,
+        counterText: '',
+      ),
+      onChanged: onChanged,
+    );
+  }
+}
+
+----------- END FILE: modules/core/widgets/inputs/address_field.dart -----------
+
+-------------- FILE: modules/core/widgets/inputs/choice_chips.dart -------------
+
+------------ END FILE: modules/core/widgets/inputs/choice_chips.dart -----------
+
+--------------- FILE: modules/core/widgets/inputs/name_field.dart --------------
+// lib/modules/core/widgets/inputs/name_field.dart
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import '../../utils/input/input_formatters.dart';
+
+class NameField extends StatelessWidget {
+  final TextEditingController controller;
+  final FocusNode? focusNode;
+  final String label;
+  final String? errorText;
+  final TextInputAction textInputAction;
+  final void Function(String)? onChanged;
+  final int maxLength;
+
+  const NameField({
+    super.key,
+    required this.controller,
+    this.focusNode,
+    this.label = 'Nombre',
+    this.errorText,
+    this.textInputAction = TextInputAction.next,
+    this.onChanged,
+    this.maxLength = 60,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // ⚠️ Siempre pasar una lista growable a inputFormatters
+    final formatters = <TextInputFormatter>[
+      const LettersOnlyTextFormatter(),
+      LengthLimitingTextInputFormatter(maxLength),
+    ];
+
+    return TextField(
+      controller: controller,
+      focusNode: focusNode,
+      textInputAction: textInputAction,
+      keyboardType: TextInputType.name,
+      textCapitalization: TextCapitalization.words,
+      autofillHints: const [AutofillHints.name],
+      enableSuggestions: false,
+      inputFormatters: List<TextInputFormatter>.of(formatters),
+      decoration: InputDecoration(
+        labelText: label,
+        errorText: errorText,
+        border: const OutlineInputBorder(),
+        isDense: true,
+        counterText: '',
+      ),
+      onChanged: onChanged,
+    );
+  }
+}
+
+------------- END FILE: modules/core/widgets/inputs/name_field.dart ------------
+
+------------- FILE: modules/core/widgets/inputs/password_field.dart ------------
+// lib/modules/core/widgets/inputs/password_field.dart
+import 'package:flutter/material.dart';
+
+/// Campo de contraseña reutilizable con:
+/// - Ícono de ojo (tap: toggle)
+/// - Revelar mientras se mantiene presionado (long-press)
+/// - Auto-ocultar al volver a teclear
+/// - Usa InputDecorationTheme global + withValues(alpha: ...)
+class PasswordField extends StatefulWidget {
+  final TextEditingController controller;
+  final String labelText;
+  final FormFieldValidator<String>? validator;
+  final ValueChanged<String>? onChanged;
+  final TextInputAction textInputAction;
+  final VoidCallback? onSubmitted;
+  final bool enabled;
+  final FocusNode? focusNode;
+  final Iterable<String> autofillHints;
+
+  const PasswordField({
+    super.key,
+    required this.controller,
+    this.labelText = 'Contraseña',
+    this.validator,
+    this.onChanged,
+    this.textInputAction = TextInputAction.done,
+    this.onSubmitted,
+    this.enabled = true,
+    this.focusNode,
+    this.autofillHints = const [AutofillHints.password],
+  });
+
+  @override
+  State<PasswordField> createState() => _PasswordFieldState();
+}
+
+class _PasswordFieldState extends State<PasswordField> {
+  bool _obscure = true;
+  late final FocusNode _node = widget.focusNode ?? FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    // Auto-ocultar si el usuario vuelve a escribir
+    widget.controller.addListener(_reHideOnTyping);
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_reHideOnTyping);
+    if (widget.focusNode == null) _node.dispose();
+    super.dispose();
+  }
+
+  void _reHideOnTyping() {
+    if (!_obscure) {
+      setState(() => _obscure = true);
+    }
+  }
+
+  void _toggle() => setState(() => _obscure = !_obscure);
+  void _reveal(bool reveal) => setState(() => _obscure = !reveal);
+
+  static const double _fillOpacity = 0.30;
+
+  @override
+  Widget build(BuildContext context) {
+    // Match the semi-transparent fill used by the rest of the auth inputs.
+    final fillColor = Colors.white.withValues(alpha: _fillOpacity);
+
+    return TextFormField(
+      controller: widget.controller,
+      focusNode: _node,
+      obscureText: _obscure,
+      enabled: widget.enabled,
+      textInputAction: widget.textInputAction,
+      onChanged: widget.onChanged,
+      validator: widget.validator,
+      onFieldSubmitted: (_) => widget.onSubmitted?.call(),
+      autofillHints: widget.autofillHints,
+      enableSuggestions: false,
+      autocorrect: false,
+      decoration: InputDecoration(
+        labelText: widget.labelText,
+        filled: true,
+        fillColor: fillColor,
+        suffixIcon: _EyeSuffix(
+          isObscure: _obscure,
+          onTap: _toggle,
+          onLongPressStart: (_) => _reveal(true),
+          onLongPressEnd: (_) => _reveal(false),
+        ),
+      ),
+    );
+  }
+}
+
+class _EyeSuffix extends StatelessWidget {
+  final bool isObscure;
+  final VoidCallback onTap;
+  final void Function(LongPressStartDetails) onLongPressStart;
+  final void Function(LongPressEndDetails) onLongPressEnd;
+
+  const _EyeSuffix({
+    required this.isObscure,
+    required this.onTap,
+    required this.onLongPressStart,
+    required this.onLongPressEnd,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final icon = isObscure
+        ? Icons.visibility_off_outlined
+        : Icons.visibility_outlined;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      onLongPressStart: onLongPressStart,
+      onLongPressEnd: onLongPressEnd,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        child: Icon(icon),
+      ),
+    );
+  }
+}
+
+----------- END FILE: modules/core/widgets/inputs/password_field.dart ----------
+
+------------- FILE: modules/core/widgets/inputs/phone_ec_field.dart ------------
+// lib/modules/core/widgets/inputs/phone_ec_field.dart
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import '../../utils/input/input_formatters.dart';
+
+/// Campo de teléfono móvil Ecuador (local, sin +593 en el input).
+/// Prefijo fijo: (+593) ; Entrada: 09XXXXXXXX (10) o 9XXXXXXXX (9)
+class PhoneEcField extends StatelessWidget {
+  final TextEditingController controller;
+  final FocusNode? focusNode;
+  final String label;
+  final String? errorText;
+  final void Function(String)? onChanged;
+  final TextInputAction textInputAction;
+
+  const PhoneEcField({
+    super.key,
+    required this.controller,
+    this.focusNode,
+    this.label = 'Teléfono',
+    this.errorText,
+    this.onChanged,
+    this.textInputAction = TextInputAction.done,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    // ⚠️ Growable
+    final formatters = <TextInputFormatter>[
+      const EcPhoneLocalDigitsFormatter(),
+    ];
+
+    return InputDecorator(
+      decoration: InputDecoration(
+        labelText: label,
+        errorText: errorText,
+        border: const OutlineInputBorder(),
+        isDense: true,
+        contentPadding: EdgeInsets.zero,
+      ),
+      child: Row(
+        children: [
+          // Prefijo fijo
+          Container(
+            margin: const EdgeInsets.only(left: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            decoration: BoxDecoration(
+              color: cs.surfaceContainerHighest.withValues(alpha: .5),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Text(
+              '(+593)',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+          const SizedBox(width: 8),
+          // Entrada local
+          Expanded(
+            child: TextField(
+              controller: controller,
+              focusNode: focusNode,
+              keyboardType: TextInputType.phone,
+              autofillHints: const [AutofillHints.telephoneNumber],
+              textInputAction: textInputAction,
+              inputFormatters: List<TextInputFormatter>.of(formatters),
+              decoration: const InputDecoration(
+                hintText: '09XXXXXXXX o 9XXXXXXXX',
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 12,
+                ),
+              ),
+              onChanged: onChanged,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+----------- END FILE: modules/core/widgets/inputs/phone_ec_field.dart ----------
+
+------------ FILE: modules/core/widgets/inputs/quantity_stepper.dart -----------
+// modules/features/catalog/presentation/widgets/product/quantity_stepper.dart
+import 'package:flutter/material.dart';
+
+class QuantityStepper extends StatelessWidget {
+  final int qty;
+  final int minQty;
+  final VoidCallback onDec;
+  final VoidCallback onInc;
+
+  const QuantityStepper({
+    super.key,
+    required this.qty,
+    required this.minQty,
+    required this.onDec,
+    required this.onInc,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const Text(
+          'Cantidad',
+          style: TextStyle(fontWeight: FontWeight.w700),
+        ),
+        const Spacer(),
+        IconButton(
+          onPressed: qty > minQty ? onDec : null,
+          icon: const Icon(Icons.remove_circle_outline),
+        ),
+        Text(
+          '$qty',
+          style: const TextStyle(fontWeight: FontWeight.w700),
+        ),
+        IconButton(
+          onPressed: onInc,
+          icon: const Icon(Icons.add_circle_outline),
+        ),
+      ],
+    );
+  }
+}
+
+---------- END FILE: modules/core/widgets/inputs/quantity_stepper.dart ---------
+
+Dentro de /layout:
+
+------------ FILE: modules/core/widgets/layout/app_back_button.dart ------------
+// lib/modules/core/widgets/app_back_button.dart
+import 'package:flutter/material.dart';
+import '../../utils/navigation/back_navigator.dart';
+
+class AppBackButton extends StatelessWidget {
+  final Color? color;
+  final IconData icon;
+  final String? popToRoute;
+  final bool Function()? intercept; // devuelve true si consumes el back
+  final bool forceToRoute;          // << NUEVO: limpiar pila y llevar a popToRoute
+
+  const AppBackButton({
+    super.key,
+    this.color,
+    this.icon = Icons.arrow_back,
+    this.popToRoute,
+    this.intercept,
+    this.forceToRoute = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      icon: Icon(icon, color: color ?? Colors.white),
+      onPressed: () => handleBack(
+        context,
+        intercept: intercept,
+        popToRoute: popToRoute,
+        useMaybePop: false,     // botón propio: determinista
+        forceToRoute: forceToRoute,
+      ),
+    );
+  }
+}
+
+---------- END FILE: modules/core/widgets/layout/app_back_button.dart ----------
+
+---------------- FILE: modules/core/widgets/layout/app_logo.dart ---------------
+// modules/core/widgets/app_logo.dart
+import 'package:flutter/material.dart';
+
+class AppLogo extends StatelessWidget {
+  /// null => adaptativo por ancho; valor => tamaño exacto.
+  final double? size;
+  final Brightness? overrideBrightness;
+  final BoxFit fit;
+
+  const AppLogo({
+    super.key,
+    this.size, // null => adaptativo
+    this.overrideBrightness,
+    this.fit = BoxFit.contain,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final Brightness brightness =
+        overrideBrightness ?? Theme.of(context).brightness;
+    final bool isDark = brightness == Brightness.dark;
+
+    final String assetPath = isDark
+        ? 'assets/Logo2_FondoTransparente-Blanco.png'
+        : 'assets/Logo1_FondoTransparente-Azul.png';
+
+    final mq = MediaQuery.maybeOf(context);
+    final double w = mq?.size.width ?? 360;
+
+    // Si size != null, respeta exactamente ese valor.
+    if (size != null) {
+      return Image.asset(assetPath, width: size, height: size, fit: fit);
+    }
+
+    // Adaptativo por breakpoints (dp) + protección en pantallas enormes.
+    // Teléfonos chico/medio/grande + “phablets”/tablets y foldables.
+    double s;
+    if (w >= 840) {
+      // Muy ancho: como % del ancho con tope
+      s = (w * 0.28).clamp(260.0, 320.0);
+    } else if (w >= 600) {
+      s = 240.0;
+    } else if (w >= 480) {
+      s = 220.0;
+    } else if (w >= 420) {
+      s = 200.0;
+    } else if (w >= 360) {
+      s = 180.0;
+    } else {
+      s = 160.0;
+    }
+
+    return Image.asset(assetPath, width: s, height: s, fit: fit);
+  }
+}
+
+-------------- END FILE: modules/core/widgets/layout/app_logo.dart -------------
+
+---------- FILE: modules/core/widgets/layout/auto_scroll_on_focus.dart ---------
+// lib/modules/core/widgets/auto_scroll_on_focus.dart
+import 'dart:async';
+import 'package:flutter/material.dart';
+
+/// Envuelve un campo con un FocusNode existente y, cuando gana foco,
+/// hace scroll suave para mantenerlo visible por encima del teclado.
+///
+/// - alignment: 0.0 = top, 1.0 = bottom; valores intermedios centran mejor.
+/// - Usa un pequeño debounce para evitar disparos múltiples en focos rápidos.
+/// - Sin awaits con BuildContext → evita el lint `use_build_context_synchronously`.
+class AutoScrollOnFocus extends StatefulWidget {
+  final FocusNode focusNode;
+  final Widget child;
+
+  /// Espera antes del intento de scroll (deja iniciar la animación del teclado).
+  final Duration delay;
+
+  /// Duración de la animación de scroll.
+  final Duration duration;
+
+  /// Curva de la animación de scroll.
+  final Curve curve;
+
+  /// 0.0 = top, 1.0 = bottom
+  final double alignment;
+
+  /// Padding extra para que el campo no quede “rozando” el teclado/barras.
+  final EdgeInsets extraScrollPadding;
+
+  const AutoScrollOnFocus({
+    super.key,
+    required this.focusNode,
+    required this.child,
+    this.delay = const Duration(milliseconds: 40),
+    this.duration = const Duration(milliseconds: 260),
+    this.curve = Curves.easeOutCubic,
+    this.alignment = 0.28,
+    this.extraScrollPadding = const EdgeInsets.only(bottom: 48),
+  });
+
+  @override
+  State<AutoScrollOnFocus> createState() => _AutoScrollOnFocusState();
+}
+
+class _AutoScrollOnFocusState extends State<AutoScrollOnFocus> {
+  late final VoidCallback _listener;
+  Timer? _debounce;
+
+  @override
+  void initState() {
+    super.initState();
+    _listener = () {
+      if (!widget.focusNode.hasFocus) return;
+      _debounce?.cancel();
+      _debounce = Timer(widget.delay, _scrollIntoViewIfNeeded);
+    };
+    widget.focusNode.addListener(_listener);
+  }
+
+  void _scrollIntoViewIfNeeded() {
+    if (!mounted) return;
+
+    // Si el render aún no existe, no hacemos nada.
+    final render = context.findRenderObject();
+    if (render == null) return;
+
+    // Importante: no usar await aquí para evitar `use_build_context_synchronously`.
+    Scrollable.ensureVisible(
+      context,
+      alignment: widget.alignment,
+      duration: widget.duration,
+      curve: widget.curve,
+      // Único valor que respeta `alignment`.
+      alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
+    );
+  }
+
+  @override
+  void dispose() {
+    widget.focusNode.removeListener(_listener);
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Aplica un padding extra para ayudar a que el field quede cómodo sobre el IME.
+    return Padding(padding: widget.extraScrollPadding, child: widget.child);
+  }
+}
+
+-------- END FILE: modules/core/widgets/layout/auto_scroll_on_focus.dart -------
+
+------------- FILE: modules/core/widgets/layout/ime_boot_guard.dart ------------
+// lib/modules/core/widgets/ime_boot_guard.dart
+import 'dart:io' show Platform;
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+/// Oculta el IME una sola vez justo después de (re)iniciar el árbol de Flutter.
+/// - Solo Android (en iOS no es necesario).
+/// - No “spamea” logs: se ejecuta una vez por arranque/hot restart.
+/// - No interfiere con el control normal del foco.
+class ImeBootGuard extends StatefulWidget {
+  final Widget child;
+  const ImeBootGuard({super.key, required this.child});
+
+  @override
+  State<ImeBootGuard> createState() => _ImeBootGuardState();
+}
+
+class _ImeBootGuardState extends State<ImeBootGuard> {
+  bool _ranOnce = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Ejecuta al final del primer frame.
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (_ranOnce || !Platform.isAndroid) return;
+      _ranOnce = true;
+
+      // Pequeño delay: deja que el sistema “asiente” el árbol.
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+
+      // Si al arrancar el IME quedó visible, lo escondemos una vez.
+      try {
+        await SystemChannels.textInput.invokeMethod('TextInput.hide');
+      } catch (_) {
+        // Ignorar: preferimos no reventar por algo cosmético.
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
+}
+
+----------- END FILE: modules/core/widgets/layout/ime_boot_guard.dart ----------
+
+------------- FILE: modules/core/widgets/layout/tab_back_guard.dart ------------
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+import '../../utils/navigation/minimize.dart';
+
+/// Intercepta el botón atrás en pantallas con tabs raíz.
+/// - Si no estás en el tab raíz, navega a él en lugar de hacer pop.
+/// - Si ya estás en el tab raíz, requiere doble atrás en una ventana de tiempo
+///   antes de enviar la app al background (Android) o simplemente absorber el back.
+class TabBackGuard extends StatefulWidget {
+  const TabBackGuard({
+    super.key,
+    required this.child,
+    required this.currentIndex,
+    required this.onRequestRoot,
+    this.rootIndex = 0,
+    this.exitMessage = 'Pulsa atrás de nuevo para salir',
+    this.exitWindow = const Duration(seconds: 6),
+    this.onExit,
+  });
+
+  final Widget child;
+  final int currentIndex;
+  final int rootIndex;
+  final VoidCallback onRequestRoot;
+  final String? exitMessage;
+  final Duration exitWindow;
+  final Future<void> Function()? onExit;
+
+  @override
+  State<TabBackGuard> createState() => _TabBackGuardState();
+}
+
+class _TabBackGuardState extends State<TabBackGuard> {
+  bool _handlingBack = false;
+  DateTime? _exitArmedUntil;
+
+  Future<void> _handleBack() async {
+    if (_handlingBack) return;
+    _handlingBack = true;
+    try {
+      // Primer back: volver al tab raíz.
+      if (widget.currentIndex != widget.rootIndex) {
+        widget.onRequestRoot();
+        return;
+      }
+
+      // Segundo back dentro de la ventana: minimizar/salir.
+      final now = DateTime.now();
+      final armed = _exitArmedUntil != null && now.isBefore(_exitArmedUntil!);
+      if (armed) {
+        if (widget.onExit != null) {
+          await widget.onExit!.call();
+        } else {
+          await AppMinimize.toBackground();
+        }
+        return;
+      }
+
+      _exitArmedUntil = now.add(widget.exitWindow);
+      if (mounted && widget.exitMessage != null) {
+        ScaffoldMessenger.of(context)
+          ..removeCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              content: Text(widget.exitMessage!),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+      }
+      await HapticFeedback.selectionClick();
+    } finally {
+      _handlingBack = false;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        await _handleBack();
+      },
+      child: widget.child,
+    );
+  }
+}
+
+----------- END FILE: modules/core/widgets/layout/tab_back_guard.dart ----------
+
+---------- FILE: modules/core/widgets/layout/tap_outside_unfocus.dart ----------
+// lib/modules/core/widgets/tap_outside_unfocus.dart
+import 'package:flutter/material.dart';
+import '../../utils/input/keyboard.dart';
+
+/// Oculta el teclado solo cuando el usuario toca FUERA de un campo.
+/// - No interfiere con taps dentro de TextField (no "togglea" el IME).
+/// - Por defecto NO cierra al arrastrar/scroll (se puede habilitar).
+class TapOutsideUnfocus extends StatelessWidget {
+  final Widget child;
+
+  /// Si true, también oculta el teclado al iniciar un drag/pan.
+  /// Mantener en false evita que el teclado se cierre al hacer scroll.
+  final bool dismissOnPan;
+
+  /// Usar deferToChild: si un hijo maneja el gesto (TextField) nosotros NO.
+  final HitTestBehavior behavior;
+
+  const TapOutsideUnfocus({
+    super.key,
+    required this.child,
+    this.dismissOnPan = false,
+    this.behavior = HitTestBehavior.deferToChild,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: behavior,
+      onTap: () => hideKeyboard(context),
+      onPanDown: dismissOnPan ? (_) => hideKeyboard(context) : null,
+      child: child,
+    );
+  }
+}
+
+-------- END FILE: modules/core/widgets/layout/tap_outside_unfocus.dart --------
+
+Dentro de /media:
+
+----------- FILE: modules/core/widgets/media/avatar_cropper_page.dart ----------
+import 'dart:typed_data';
+
+import 'package:crop_your_image/crop_your_image.dart';
+import 'package:flutter/material.dart';
+import 'package:image/image.dart' as img;
+
+import '../../entities/image_crop_data.dart';
+
+class CropAspectRatioOption {
+  final String label;
+  final double value;
+
+  const CropAspectRatioOption(this.label, this.value);
+
+  const CropAspectRatioOption.square() : this('1:1', 1);
+}
+
+class CropSelectionResult {
+  final Uint8List previewBytes;
+  final ImageCropData recipe;
+
+  const CropSelectionResult({
+    required this.previewBytes,
+    required this.recipe,
+  });
+}
+
+/// Pantalla genérica para recortar imágenes (por defecto 1:1).
+class AvatarCropperPage extends StatefulWidget {
+  final Uint8List originalBytes;
+  final int maxSize;
+  final int jpegQuality;
+  final List<CropAspectRatioOption> aspectRatios;
+
+  const AvatarCropperPage({
+    super.key,
+    required this.originalBytes,
+    this.maxSize = 1024,
+    this.jpegQuality = 85,
+    this.aspectRatios = const [CropAspectRatioOption.square()],
+  });
+
+  @override
+  State<AvatarCropperPage> createState() => _AvatarCropperPageState();
+}
+
+class _AvatarCropperPageState extends State<AvatarCropperPage> {
+  final _controller = CropController();
+  bool _cropping = false;
+  Rect? _lastImageRect;
+  late CropAspectRatioOption _selectedRatio =
+      widget.aspectRatios.isNotEmpty ? widget.aspectRatios.first : const CropAspectRatioOption.square();
+  late final img.Image? _decodedOriginal = img.decodeImage(widget.originalBytes);
+
+  void _confirm() {
+    setState(() => _cropping = true);
+    _controller.crop();
+  }
+
+  void _handleCropResult(CropResult result) {
+    switch (result) {
+      case CropSuccess(:final croppedImage):
+        _onCroppedBytes(croppedImage);
+      case CropFailure(:final cause):
+        _onCropError(cause);
+    }
+  }
+
+  void _onCropError(Object cause) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('No se pudo recortar la imagen: $cause')),
+    );
+    setState(() => _cropping = false);
+  }
+
+  void _onCroppedBytes(Uint8List cropped) {
+    final img.Image? decodedPreview = img.decodeImage(cropped);
+    if (decodedPreview == null) {
+      Navigator.pop(context);
+      return;
+    }
+
+    final int side = decodedPreview.width;
+    final int target = side > widget.maxSize ? widget.maxSize : side;
+
+    final img.Image resized =
+        target != side ? img.copyResize(decodedPreview, width: target, height: target) : decodedPreview;
+    final Uint8List jpg = Uint8List.fromList(
+      img.encodeJpg(resized, quality: widget.jpegQuality),
+    );
+
+    final cropData = _buildCropData();
+
+    Navigator.pop(
+      context,
+      CropSelectionResult(previewBytes: jpg, recipe: cropData),
+    );
+  }
+
+  ImageCropData _buildCropData() {
+    final originalWidth = _decodedOriginal?.width ?? 0;
+    final originalHeight = _decodedOriginal?.height ?? 0;
+    Rect rect = _lastImageRect ??
+        Rect.fromLTWH(
+          0,
+          0,
+          originalWidth.toDouble(),
+          originalHeight.toDouble(),
+        );
+    if (originalWidth == 0 || originalHeight == 0) {
+      rect = Rect.fromLTWH(0, 0, 0, 0);
+    }
+    return ImageCropData(
+      ratio: _selectedRatio.value,
+      left: rect.left,
+      top: rect.top,
+      width: rect.width,
+      height: rect.height,
+      originalWidth: originalWidth,
+      originalHeight: originalHeight,
+    );
+  }
+
+  void _selectRatio(CropAspectRatioOption option) {
+    setState(() => _selectedRatio = option);
+    _controller.aspectRatio = option.value;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Ajustar imagen'),
+        actions: [
+          TextButton(
+            onPressed: _cropping ? null : _confirm,
+            child: const Text(
+              'Usar',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          if (widget.aspectRatios.length > 1)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Wrap(
+                spacing: 8,
+                children: widget.aspectRatios
+                    .map(
+                      (option) => ChoiceChip(
+                        label: Text(option.label),
+                        selected: option.value == _selectedRatio.value,
+                        onSelected: (_) => _selectRatio(option),
+                      ),
+                    )
+                    .toList(),
+              ),
+            ),
+          Expanded(
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: Crop(
+                    controller: _controller,
+                    image: widget.originalBytes,
+                    onCropped: _handleCropResult,
+                    aspectRatio: _selectedRatio.value,
+                    withCircleUi: false,
+                    baseColor: theme.colorScheme.surface,
+                    maskColor: Colors.black.withValues(alpha: 0.6),
+                    radius: 12,
+                    interactive: true,
+                    onMoved: (_, imageRect) => _lastImageRect = imageRect,
+                    cornerDotBuilder: (size, edgeAlignment) {
+                      return Container(
+                        width: size,
+                        height: size,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                if (_cropping)
+                  const Positioned.fill(
+                    child: ColoredBox(
+                      color: Color(0x66000000),
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+--------- END FILE: modules/core/widgets/media/avatar_cropper_page.dart --------
+
+Dentro de /network:
+
+---------- FILE: modules/core/widgets/network/connectivity_badge.dart ----------
+// lib/modules/core/widgets/connectivity_badge.dart
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../blocs/net_signal_cubit.dart';
+import 'connectivity_visuals.dart';
+
+/// Iconito flotante tipo "Clash Royale":
+/// - Oculto en online
+/// - Pulsa/parpadea en UNSTABLE
+/// - Fijo en OFFLINE
+class ConnectivityBadge extends StatefulWidget {
+  const ConnectivityBadge({super.key});
+
+  @override
+  State<ConnectivityBadge> createState() => _ConnectivityBadgeState();
+}
+
+class _ConnectivityBadgeState extends State<ConnectivityBadge>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  );
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<NetSignalCubit, NetStatus>(
+      builder: (_, st) {
+        if (st == NetStatus.online) return const SizedBox.shrink();
+
+        final v = ConnectivityVisuals.of(context, st);
+
+        // Control de animación según estado
+        if (st == NetStatus.unstable) {
+          if (!_pulse.isAnimating) _pulse.repeat(reverse: true);
+        } else {
+          if (_pulse.isAnimating) _pulse.stop();
+          _pulse.value = 1; // tamaño/opacidad plena en OFFLINE
+        }
+
+        final icon = Icon(v.icon, size: 18, color: v.fg);
+        final chip = Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: v.bg.withValues(alpha: .95),
+            shape: BoxShape.circle,
+            boxShadow: const [BoxShadow(blurRadius: 8, color: Color(0x33000000))],
+          ),
+          child: icon,
+        );
+
+        final animated = st == NetStatus.unstable
+            ? FadeTransition(
+                opacity: Tween(begin: .55, end: 1.0)
+                    .animate(CurvedAnimation(parent: _pulse, curve: Curves.easeInOut)),
+                child: ScaleTransition(
+                  scale: Tween(begin: .92, end: 1.0)
+                      .animate(CurvedAnimation(parent: _pulse, curve: Curves.easeInOut)),
+                  child: chip,
+                ),
+              )
+            : chip;
+
+        return Tooltip(message: v.label, child: animated);
+      },
+    );
+  }
+}
+
+-------- END FILE: modules/core/widgets/network/connectivity_badge.dart --------
+
+---------- FILE: modules/core/widgets/network/connectivity_banner.dart ---------
+// lib/modules/core/widgets/connectivity_banner.dart
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../blocs/net_signal_cubit.dart';
+
+/// Barra compacta M3 que aparece en UNSTABLE/OFFLINE.
+/// - Empuja contenido (no es overlay).
+/// - Tipografía 13, icono + texto corto.
+/// - Sin emojis ni subrayados.
+class ConnectivityBanner extends StatelessWidget {
+  const ConnectivityBanner({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return BlocBuilder<NetSignalCubit, NetStatus>(
+      builder: (context, st) {
+        if (st == NetStatus.online) return const SizedBox.shrink();
+
+        final isUnstable = st == NetStatus.unstable;
+        final bg = isUnstable ? cs.tertiaryContainer : cs.errorContainer;
+        final fg = isUnstable ? cs.onTertiaryContainer : cs.onErrorContainer;
+        final msg = isUnstable
+            ? 'Conexión inestable. Algunas acciones podrían fallar.'
+            : 'Sin conexión. Algunas funciones no estarán disponibles.';
+
+        return Material(
+          color: bg,
+          elevation: 0,
+          child: SafeArea(
+            bottom: false,
+            child: AnimatedSize(
+              duration: const Duration(milliseconds: 160),
+              alignment: Alignment.topCenter,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: Row(
+                  children: [
+                    Icon(
+                      isUnstable
+                          ? Icons.wifi_tethering_error_rounded
+                          : Icons.wifi_off_rounded,
+                      color: fg,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        msg,
+                        style: TextStyle(
+                          decoration: TextDecoration.none,
+                          color: fg,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          height: 1.2,
+                        ),
+                        maxLines: 2,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+-------- END FILE: modules/core/widgets/network/connectivity_banner.dart -------
+
+----------- FILE: modules/core/widgets/network/connectivity_hud.dart -----------
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../blocs/net_signal_cubit.dart';
+import 'connectivity_visuals.dart'; // 👈 usa el helper
+
+class ConnectivityHUD extends StatelessWidget {
+  const ConnectivityHUD({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      ignoring: true,
+      child: SafeArea(
+        bottom: false,
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: BlocBuilder<NetSignalCubit, NetStatus>(
+            builder: (_, st) {
+              final show = st != NetStatus.online;
+              final v = ConnectivityVisuals.of(context, st); // 👈 sin duplicar
+
+              return AnimatedSlide(
+                duration: const Duration(milliseconds: 200),
+                offset: show ? Offset.zero : const Offset(0, -1),
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 200),
+                  opacity: show ? 1 : 0,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Container(
+                      constraints: const BoxConstraints(maxWidth: 520),
+                      margin: const EdgeInsets.symmetric(horizontal: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: v.bg.withValues(alpha: .95),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: const [BoxShadow(blurRadius: 12, color: Color(0x33000000))],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(v.icon, size: 18, color: v.fg),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              st == NetStatus.unstable
+                                  ? 'Conexión inestable. Algunas acciones podrían fallar.'
+                                  : 'Sin conexión. Algunas funciones no estarán disponibles.',
+                              style: TextStyle(
+                                color: v.fg,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                                height: 1.2,
+                                decoration: TextDecoration.none,
+                              ),
+                              maxLines: 2,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+--------- END FILE: modules/core/widgets/network/connectivity_hud.dart ---------
+
+--------- FILE: modules/core/widgets/network/connectivity_visuals.dart ---------
+import 'package:flutter/material.dart';
+import '../../blocs/net_signal_cubit.dart';
+
+class ConnectivityVisuals {
+  final Color bg;
+  final Color fg;
+  final IconData icon;
+  final String label;
+
+  const ConnectivityVisuals({
+    required this.bg,
+    required this.fg,
+    required this.icon,
+    required this.label,
+  });
+
+  static ConnectivityVisuals of(BuildContext context, NetStatus st) {
+    final cs = Theme.of(context).colorScheme;
+    final isUnstable = st == NetStatus.unstable;
+    return ConnectivityVisuals(
+      bg: isUnstable ? cs.tertiaryContainer : cs.errorContainer,
+      fg: isUnstable ? cs.onTertiaryContainer : cs.onErrorContainer,
+      icon: isUnstable
+          ? Icons.wifi_tethering_error_rounded
+          : Icons.wifi_off_rounded,
+      label: isUnstable ? 'Conexión inestable' : 'Sin conexión',
+    );
+  }
+}
+
+------- END FILE: modules/core/widgets/network/connectivity_visuals.dart -------
+
+------------ FILE: modules/core/widgets/network/require_online.dart ------------
+// lib/modules/core/widgets/require_online.dart
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../blocs/net_signal_cubit.dart';
+
+/// Envuelve cualquier widget para deshabilitarlo si no hay Internet.
+/// - Baja opacidad
+/// - Bloquea taps (AbsorbPointer)
+/// - (Opcional) muestra tooltip
+class RequireOnline extends StatelessWidget {
+  final Widget child;
+  final String tooltipWhenOffline;
+  final bool showTooltip;
+
+  const RequireOnline({
+    super.key,
+    required this.child,
+    this.tooltipWhenOffline = 'Sin conexión',
+    this.showTooltip = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<NetSignalCubit, NetStatus>(
+      buildWhen: (p, c) => p != c,
+      builder: (context, status) {
+        final online = status == NetStatus.online;
+        final body = AbsorbPointer(
+          absorbing: !online,
+          child: Opacity(opacity: online ? 1.0 : 0.6, child: child),
+        );
+        if (online || !showTooltip) return body;
+        return Tooltip(message: tooltipWhenOffline, child: body);
+      },
+    );
+  }
+}
+
+---------- END FILE: modules/core/widgets/network/require_online.dart ----------
+
